@@ -21,6 +21,7 @@
     "dev": "node build.mjs --dev",
     "build": "node build.mjs",
     "start": "node build/index.js",
+    "start:server": "NODE_ENV=server node build/index.js",
     "lint": "eslint . --ext .js,.jsx",
     "lint:fix": "eslint . --ext .js,.jsx --fix",
     "format": "prettier --write .",

@@ -25,11 +25,7 @@ WORKDIR /app
 COPY --from=build /app/build ./build
 
 # Copy package.json and package-lock.json
-COPY package.json package-lock.json ./
-
-# Copy src directory maintaining structure
-# TODO: Check if we can skip /core/assets folder to save space
-COPY src ./src
+COPY package.json package-lock.json .env ./
 
 # Install only production dependencies
 RUN npm install --only=production
@@ -38,4 +34,4 @@ RUN npm install --only=production
 EXPOSE 3000
 
 # Start the application
-CMD ["npm", "run", "start:server"]
+CMD ["npm", "run", "start"]

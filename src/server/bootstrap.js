@@ -2,8 +2,10 @@ import sourceMapSupport from 'source-map-support'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
-// read .env files
-import 'dotenv-flow/config'
+// if not in server mode, read .env files, otherwise skip (env variables are being defined in runtime)
+if (process.env.NODE_ENV !== 'server') {
+    await import('dotenv-flow/config.js')
+}
 
 // support node source maps
 sourceMapSupport.install()
