@@ -26,6 +26,11 @@ export class ClientControls extends System {
       position: new THREE.Vector3(), // [0,0] to [viewportWidth,viewportHeight]
       delta: new THREE.Vector3(), // position delta (pixels)
     }
+    this.touches = new Map() // id -> { id, position, delta, prevPosition }
+    this.screen = {
+      width: 0,
+      height: 0,
+    }
     this.scroll = {
       delta: 0,
     }
@@ -47,6 +52,11 @@ export class ClientControls extends System {
       const consume = control.options.onScroll?.()
       if (consume) break
     }
+    // screen
+    for (const control of this.controls) {
+      control.api.screen.width = this.viewport.offsetWidth
+      control.api.screen.height = this.viewport.offsetHeight
+    }
   }
 
   postLateUpdate() {
@@ -66,18 +76,29 @@ export class ClientControls extends System {
         break
       }
     }
+    // clear touch deltas
+    for (const [id, info] of this.touches) {
+      info.delta.set(0, 0, 0)
+    }
   }
 
   async init({ viewport }) {
     this.viewport = viewport
+    this.screen.width = this.viewport.offsetWidth
+    this.screen.height = this.viewport.offsetHeight
     window.addEventListener('keydown', this.onKeyDown)
     window.addEventListener('keyup', this.onKeyUp)
     document.addEventListener('pointerlockchange', this.onPointerLockChange)
     this.viewport.addEventListener('pointerdown', this.onPointerDown)
     window.addEventListener('pointermove', this.onPointerMove)
+    this.viewport.addEventListener('touchstart', this.onTouchStart)
+    this.viewport.addEventListener('touchmove', this.onTouchMove)
+    this.viewport.addEventListener('touchend', this.onTouchEnd)
+    this.viewport.addEventListener('touchcancel', this.onTouchEnd)
     this.viewport.addEventListener('pointerup', this.onPointerUp)
     this.viewport.addEventListener('wheel', this.onScroll, { passive: false }) // prettier-ignore
     this.viewport.addEventListener('contextmenu', this.onContextMenu)
+    window.addEventListener('resize', this.onResize)
     window.addEventListener('blur', this.onBlur)
   }
 
@@ -115,6 +136,10 @@ export class ClientControls extends System {
           unclaim: () => {
             control.api.camera.claimed = false
           },
+        },
+        screen: {
+          width: 0,
+          height: 0,
         },
         release: () => {
           const idx = this.controls.indexOf(control)
@@ -291,6 +316,56 @@ export class ClientControls extends System {
 
   onContextMenu = e => {
     e.preventDefault()
+  }
+
+  onTouchStart = e => {
+    e.preventDefault()
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      const touch = e.changedTouches[i]
+      const info = {
+        id: touch.identifier,
+        position: new THREE.Vector3(touch.clientX, touch.clientY, 0),
+        prevPosition: new THREE.Vector3(touch.clientX, touch.clientY, 0),
+        delta: new THREE.Vector3(),
+      }
+      this.touches.set(info.id, info)
+      for (const control of this.controls) {
+        const consume = control.options.onTouch?.(info)
+        if (consume) break
+      }
+    }
+  }
+
+  onTouchMove = e => {
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      const touch = e.changedTouches[i]
+      const info = this.touches.get(touch.identifier)
+      const currentX = touch.clientX
+      const currentY = touch.clientY
+      info.delta.x += currentX - info.prevPosition.x
+      info.delta.y += currentY - info.prevPosition.y
+      info.position.x = currentX
+      info.position.y = currentY
+      info.prevPosition.x = currentX
+      info.prevPosition.y = currentY
+    }
+  }
+
+  onTouchEnd = e => {
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      const touch = e.changedTouches[i]
+      const info = this.touches.get(touch.identifier)
+      for (const control of this.controls) {
+        const consume = control.options.onTouchEnd?.(info)
+        if (consume) break
+      }
+      this.touches.delete(touch.identifier)
+    }
+  }
+
+  onResize = () => {
+    this.screen.width = this.viewport.offsetWidth
+    this.screen.height = this.viewport.offsetHeight
   }
 
   onBlur = () => {

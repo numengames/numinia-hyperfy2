@@ -5,15 +5,15 @@ import { usePane } from './usePane'
 import { FileCode2Icon, XIcon } from 'lucide-react'
 import { hashFile } from '../../core/utils-client'
 
-export function AppCodePane({ app, onClose }) {
+export function CodePane({ entity, onClose }) {
   const paneRef = useRef()
   const headRef = useRef()
   const containerRef = useRef()
   const codeRef = useRef()
   const [editor, setEditor] = useState(null)
   const save = async () => {
-    const world = app.world
-    const blueprint = app.blueprint
+    const world = entity.world
+    const blueprint = entity.blueprint
     const code = codeRef.current
     // convert to file
     const blob = new Blob([code], { type: 'text/plain' })
@@ -34,12 +34,12 @@ export function AppCodePane({ app, onClose }) {
     // broadcast blueprint change to server + other clients
     world.network.send('blueprintModified', { id: blueprint.id, version, script: url })
   }
-  usePane('app-code', paneRef, headRef)
+  usePane('code', paneRef, headRef)
   useEffect(() => {
     let dead
     load().then(monaco => {
       if (dead) return
-      codeRef.current = app.script?.code || '// ...'
+      codeRef.current = entity.script?.code || '// ...'
       const container = containerRef.current
       const editor = monaco.editor.create(container, {
         value: codeRef.current,
@@ -122,7 +122,7 @@ export function AppCodePane({ app, onClose }) {
       <div className='acode-head' ref={headRef}>
         <FileCode2Icon size={20} />
         <div className='acode-head-title'>Script</div>
-        <div className='acode-head-close' onClick={onClose}>
+        <div className='acode-head-close' onClick={() => world.emit('code', null)}>
           <XIcon size={20} />
         </div>
       </div>

@@ -85,8 +85,9 @@ class Settings extends EventEmitter {
 
     const data = this.client.storage.get('settings', {})
     const isQuest = /OculusBrowser/.test(navigator.userAgent)
+    const isTouch = navigator.userAgent.match(/OculusBrowser|iPhone|iPad|iPod|Android/i)
 
-    this.pixelRatio = isNumber(data.pixelRatio) ? data.pixelRatio : 1 // 0 will use window.devicePixelRatio
+    this.pixelRatio = isNumber(data.pixelRatio) ? data.pixelRatio : isTouch ? 1.5 : 1 // 0 will use window.devicePixelRatio
     this.shadows = data.shadows ? data.shadows : isQuest ? 'low' : 'high' // none, low=1, med=2048cascade, high=4096cascade
     this.postprocessing = isBoolean(data.postprocessing) ? data.postprocessing : true
     this.bloom = isBoolean(data.bloom) ? data.bloom : true

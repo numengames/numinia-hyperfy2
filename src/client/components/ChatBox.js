@@ -3,47 +3,11 @@ import { css } from '@firebolt-dev/css'
 import { MessageCircleMoreIcon, SendHorizonalIcon } from 'lucide-react'
 import moment from 'moment'
 import { uuid } from '../../core/utils'
+import { cls } from '../utils'
 
 const CHAT_TIME_REFRESH_RATE = 30 // every x seconds
 
-export function ChatBox({ world }) {
-  const [open, setOpen] = useState(true)
-  return open ? (
-    <ChatBoxOpen world={world} onClose={() => setOpen(false)} />
-  ) : (
-    <ChatBoxClosed world={world} onOpen={() => setOpen(true)} />
-  )
-}
-
-function ChatBoxClosed({ world, onOpen }) {
-  return (
-    <div
-      css={css`
-        position: absolute;
-        bottom: 20px;
-        left: 20px;
-        width: 50px;
-        height: 50px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: rgba(0, 0, 0, 0.2);
-        transition: background 0.15s ease-out;
-        border-radius: 25px;
-        pointer-events: auto;
-        &:hover {
-          background: rgba(0, 0, 0, 0.8);
-          cursor: pointer;
-        }
-      `}
-      onClick={onOpen}
-    >
-      <MessageCircleMoreIcon size={20} />
-    </div>
-  )
-}
-
-function ChatBoxOpen({ world, onClose }) {
+export function ChatBox({ className, world, active, onClose, ...props }) {
   const initRef = useRef()
   const contentRef = useRef()
   const [body, setBody] = useState('')
@@ -84,13 +48,12 @@ function ChatBoxOpen({ world, onClose }) {
   }
   return (
     <div
-      className='chat'
+      className={cls(className, 'chat', { active })}
       css={css`
         pointer-events: auto;
         position: absolute;
         bottom: 20px;
         left: 20px;
-        width: 400px;
         height: 250px;
         border-radius: 25px;
         background: rgba(22, 22, 28, 0.2);
@@ -101,6 +64,7 @@ function ChatBoxOpen({ world, onClose }) {
         display: flex;
         flex-direction: column;
         align-items: stretch;
+        &.active,
         &:hover {
           background: rgba(22, 22, 28, 1);
           border: 1px solid rgba(255, 255, 255, 0.03);
@@ -143,6 +107,7 @@ function ChatBoxOpen({ world, onClose }) {
           }
         }
       `}
+      {...props}
     >
       <div className='chat-content noscrollbar' ref={contentRef}>
         {msgs.map(msg => (

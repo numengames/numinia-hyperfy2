@@ -1,19 +1,27 @@
-import { useEffect, useRef, useState } from 'react'
 import { css } from '@firebolt-dev/css'
+import { useEffect, useRef, useState } from 'react'
 import { BoxIcon, EyeIcon, FileCode2Icon, XIcon } from 'lucide-react'
 
 import { hashFile } from '../../core/utils-client'
 import { usePane } from './usePane'
 
-export function AppInspectPane({ app, onCode, onClose }) {
+export function InspectPane({ world, entity }) {
+  if (entity.isApp) {
+    return <AppPane world={world} app={entity} />
+  }
+  if (entity.isPlayer) {
+    return <PlayerPane world={world} player={entity} />
+  }
+}
+
+export function AppPane({ world, app }) {
   const paneRef = useRef()
   const headRef = useRef()
-  usePane('app-inspect', paneRef, headRef)
+  usePane('inspect', paneRef, headRef)
   useEffect(() => {
     window.app = app
   }, [])
   const changeModel = async e => {
-    const world = app.world
     const blueprint = app.blueprint
     const file = e.target.files[0]
     if (!file) return
@@ -39,7 +47,7 @@ export function AppInspectPane({ app, onCode, onClose }) {
   return (
     <div
       ref={paneRef}
-      className='ainspect'
+      className='apane'
       css={css`
         position: absolute;
         top: 20px;
@@ -53,7 +61,7 @@ export function AppInspectPane({ app, onCode, onClose }) {
         pointer-events: auto;
         display: flex;
         flex-direction: column;
-        .ainspect-head {
+        .apane-head {
           height: 40px;
           border-bottom: 1px solid rgba(255, 255, 255, 0.05);
           display: flex;
@@ -73,19 +81,19 @@ export function AppInspectPane({ app, onCode, onClose }) {
             cursor: pointer;
           }
         }
-        .ainspect-content {
+        .apane-content {
           flex: 1;
           padding: 20px;
           overflow-y: auto;
         }
-        .ainspect-info {
+        .apane-info {
           display: flex;
           margin: 0 0 10px;
         }
-        .ainspect-info-main {
+        .apane-info-main {
           flex: 1;
         }
-        .ainspect-info-name {
+        .apane-info-name {
           display: block;
           flex: 1;
           height: 36px;
@@ -98,7 +106,7 @@ export function AppInspectPane({ app, onCode, onClose }) {
             font-size: 14px;
           }
         }
-        .ainspect-info-desc {
+        .apane-info-desc {
           display: block;
           flex: 1;
           min-height: 43px;
@@ -112,14 +120,14 @@ export function AppInspectPane({ app, onCode, onClose }) {
             font-size: 14px;
           }
         }
-        .ainspect-info-icon {
+        .apane-info-icon {
           width: 88px;
           height: 88px;
           background: #252630;
           border-radius: 10px;
           margin-left: 10px;
         }
-        .ainspect-dbl {
+        .apane-dbl {
           display: flex;
           margin: -5px;
           &-item {
@@ -127,7 +135,7 @@ export function AppInspectPane({ app, onCode, onClose }) {
             padding: 5px;
           }
         }
-        .ainspect-model {
+        .apane-model {
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -153,7 +161,7 @@ export function AppInspectPane({ app, onCode, onClose }) {
             left: -9999px;
           }
         }
-        .ainspect-script {
+        .apane-script {
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -175,45 +183,49 @@ export function AppInspectPane({ app, onCode, onClose }) {
         }
       `}
     >
-      <div className='ainspect-head' ref={headRef}>
+      <div className='apane-head' ref={headRef}>
         <EyeIcon size={20} />
-        <div className='ainspect-head-title'>Inspect</div>
-        <div className='ainspect-head-close' onClick={onClose}>
+        <div className='apane-head-title'>Inspect</div>
+        <div className='apane-head-close' onClick={() => world.emit('inspect', null)}>
           <XIcon size={20} />
         </div>
       </div>
-      <div className='ainspect-content noscrollbar'>
-        <div className='ainspect-dbl'>
-          <div className='ainspect-dbl-item'>
-            <label className='ainspect-model'>
+      <div className='apane-content noscrollbar'>
+        <div className='apane-dbl'>
+          <div className='apane-dbl-item'>
+            <label className='apane-model'>
               <input type='file' accept='.glb' onChange={changeModel} />
-              <div className='ainspect-model-icon'>
+              <div className='apane-model-icon'>
                 <BoxIcon size={20} />
               </div>
               <span>Model</span>
             </label>
           </div>
-          <div className='ainspect-dbl-item'>
-            <div className='ainspect-script' onClick={onCode}>
-              <div className='ainspect-script-icon'>
+          <div className='apane-dbl-item'>
+            <div className='apane-script' onClick={() => world.emit('code', app)}>
+              <div className='apane-script-icon'>
                 <FileCode2Icon size={20} />
               </div>
               <span>Script</span>
             </div>
           </div>
         </div>
-        {/* <div className='ainspect-info'>
-          <div className='ainspect-info-main'>
-            <label className='ainspect-info-name'>
+        {/* <div className='apane-info'>
+          <div className='apane-info-main'>
+            <label className='apane-info-name'>
               <input type='text' value={name} onChange={e => setName(e.target.value)} placeholder='Name' />
             </label>
-            <label className='ainspect-info-desc'>
+            <label className='apane-info-desc'>
               <textarea value={desc} onChange={e => setDesc(e.target.value)} placeholder='Description' />
             </label>
           </div>
-          <div className='ainspect-info-icon' />
+          <div className='apane-info-icon' />
         </div> */}
       </div>
     </div>
   )
+}
+
+function PlayerPane({ world, player }) {
+  return <div>PLAYER INSPECT</div>
 }
