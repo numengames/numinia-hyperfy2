@@ -13,10 +13,12 @@ const DOWN = new THREE.Vector3(0, -1, 0)
 const FORWARD = new THREE.Vector3(0, 0, -1)
 const BACKWARD = new THREE.Vector3(0, 0, 1)
 const SCALE_IDENTITY = new THREE.Vector3(1, 1, 1)
-const LOOK_SPEED = 0.1
+const POINTER_LOOK_SPEED = 0.1
+const PAN_LOOK_SPEED = 0.4
 const ZOOM_SPEED = 2
 const MIN_ZOOM = 2
 const MAX_ZOOM = 100 // 16
+const STICK_MAX_DISTANCE = 50
 
 const v1 = new THREE.Vector3()
 const v2 = new THREE.Vector3()
@@ -196,6 +198,24 @@ export class PlayerLocal {
       onRelease: code => {
         if (code === 'MouseRight') {
           this.control.pointer.unlock()
+        }
+      },
+      onTouch: touch => {
+        if (!this.stick && touch.position.x < this.control.screen.width / 2) {
+          this.stick = {
+            center: touch.position.clone(),
+            touch,
+          }
+        } else if (!this.pan) {
+          this.pan = touch
+        }
+      },
+      onTouchEnd: touch => {
+        if (this.stick?.touch === touch) {
+          this.stick = null
+        }
+        if (this.pan === touch) {
+          this.pan = null
         }
       },
     })
@@ -439,8 +459,13 @@ export class PlayerLocal {
   update(delta) {
     // rotate camera when looking (holding right mouse + dragging)
     if (this.control.pointer.locked) {
-      this.cam.rotation.y += -this.control.pointer.delta.x * LOOK_SPEED * delta
-      this.cam.rotation.x += -this.control.pointer.delta.y * LOOK_SPEED * delta
+      this.cam.rotation.y += -this.control.pointer.delta.x * POINTER_LOOK_SPEED * delta
+      this.cam.rotation.x += -this.control.pointer.delta.y * POINTER_LOOK_SPEED * delta
+    }
+    // or when touch panning
+    if (this.pan) {
+      this.cam.rotation.y += -this.pan.delta.x * PAN_LOOK_SPEED * delta
+      this.cam.rotation.x += -this.pan.delta.y * PAN_LOOK_SPEED * delta
     }
 
     // ensure we can't look too far up/down
@@ -452,16 +477,42 @@ export class PlayerLocal {
 
     // get our movement direction
     this.moveDir.set(0, 0, 0)
-    if (this.control.buttons.KeyW || this.control.buttons.ArrowUp) this.moveDir.z -= 1
-    if (this.control.buttons.KeyS || this.control.buttons.ArrowDown) this.moveDir.z += 1
-    if (this.control.buttons.KeyA || this.control.buttons.ArrowLeft) this.moveDir.x -= 1
-    if (this.control.buttons.KeyD || this.control.buttons.ArrowRight) this.moveDir.x += 1
+    if (this.stick) {
+      // if we have a touch joystick use that
+      const touchX = this.stick.touch.position.x
+      const touchY = this.stick.touch.position.y
+      const centerX = this.stick.center.x
+      const centerY = this.stick.center.y
+      const dx = centerX - touchX
+      const dy = centerY - touchY
+      const distance = Math.sqrt(dx * dx + dy * dy)
+      if (distance > STICK_MAX_DISTANCE) {
+        this.stick.center.x = touchX + (STICK_MAX_DISTANCE * dx) / distance
+        this.stick.center.y = touchY + (STICK_MAX_DISTANCE * dy) / distance
+      }
+      const stickX = (touchX - this.stick.center.x) / STICK_MAX_DISTANCE
+      const stickY = (touchY - this.stick.center.y) / STICK_MAX_DISTANCE
+      this.moveDir.x = stickX
+      this.moveDir.z = stickY
+    } else {
+      // otherwise use keyboard
+      if (this.control.buttons.KeyW || this.control.buttons.ArrowUp) this.moveDir.z -= 1
+      if (this.control.buttons.KeyS || this.control.buttons.ArrowDown) this.moveDir.z += 1
+      if (this.control.buttons.KeyA || this.control.buttons.ArrowLeft) this.moveDir.x -= 1
+      if (this.control.buttons.KeyD || this.control.buttons.ArrowRight) this.moveDir.x += 1
+    }
 
     // we're moving if any keys are down
     this.moving = this.moveDir.length() > 0
-    this.running = this.moving && (this.control.buttons.ShiftLeft || this.control.buttons.ShiftRight)
 
-    // normalize direction for non-joystick (prevents surfing)
+    // we're running if holding shift or full throttle joystick
+    if (this.stick) {
+      this.running = this.moving && this.moveDir.length() > 0.5
+    } else {
+      this.running = this.moving && (this.control.buttons.ShiftLeft || this.control.buttons.ShiftRight)
+    }
+
+    // normalize direction (also prevents surfing)
     this.moveDir.normalize()
 
     // rotate direction to face camera Y direction

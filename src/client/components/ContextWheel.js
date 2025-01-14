@@ -2,7 +2,7 @@ import { css } from '@firebolt-dev/css'
 import { useLayoutEffect, useMemo, useRef } from 'react'
 import { cls } from '../utils'
 
-export function ContextMenu({ x, y, actions }) {
+export function ContextWheel({ x, y, actions }) {
   const ref = useRef()
   return (
     <div

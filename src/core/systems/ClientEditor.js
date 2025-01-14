@@ -29,13 +29,11 @@ export class ClientEditor extends System {
     }
   }
 
-  async init({ viewport, onContext, onApp }) {
+  async init({ viewport }) {
     viewport.addEventListener('dragover', this.onDragOver)
     viewport.addEventListener('dragenter', this.onDragEnter)
     viewport.addEventListener('dragleave', this.onDragLeave)
     viewport.addEventListener('drop', this.onDrop)
-    this.onContext = onContext
-    this.onApp = onApp
   }
 
   start() {
@@ -104,7 +102,7 @@ export class ClientEditor extends System {
         disabled: false,
         onClick: () => {
           this.setContext(null)
-          this.onApp(entity)
+          this.world.emit('inspect', entity)
         },
       })
       context.actions.push({
@@ -175,7 +173,7 @@ export class ClientEditor extends System {
 
   setContext(value) {
     this.context = value
-    this.onContext(value)
+    this.world.emit('context', value)
   }
 
   onDragOver = e => {
