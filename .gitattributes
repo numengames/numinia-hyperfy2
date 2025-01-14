@@ -1,0 +1,8 @@
+.env merge=ours
+.env.forward merge=ours
+CONTRIBUTING.md merge=ours
+CODE_OF_CONDUCT.md merge=ours
+CHANGELOG.md merge=ours
+ISSUE_TEMPLATE.md merge=ours
+PULL_REQUEST_TEMPLATE.md merge=ours
+README.md merge=ours
