@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Basic health check endpoint (/health)
 - Docker support for local development and deployment
 - ESLint and Prettier configuration
 - Contribution guidelines and templates

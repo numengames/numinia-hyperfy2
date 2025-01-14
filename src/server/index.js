@@ -89,6 +89,25 @@ fastify.post('/api/upload', async (req, reply) => {
   }
 })
 
+fastify.get('/health', async (request, reply) => {
+  try {
+    // Basic health check
+    const health = {
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+    }
+    
+    return reply.code(200).send(health)
+  } catch (error) {
+    console.error('Health check failed:', error)
+    return reply.code(503).send({
+      status: 'error',
+      timestamp: new Date().toISOString()
+    })
+  }
+})
+
 fastify.setErrorHandler((err, req, reply) => {
   console.error(err)
   reply.status(500).send()
