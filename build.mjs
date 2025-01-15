@@ -119,6 +119,38 @@ let spawn
               spawn?.kill('SIGTERM')
               spawn = fork(path.join(rootDir, 'build/index.js'))
             } else {
+              // Create production wrapper that loads AWS secrets first
+              const wrapperContent = `
+                import { loadSecrets } from './scripts/load-aws-secrets.js';
+
+                // Main async function
+                async function main() {
+                  try {
+                    // Wait for secrets to load
+                    await loadSecrets();
+                    
+                    // Once secrets are loaded, import and execute index
+                    await import('./index.js');
+                  } catch (error) {
+                    console.error('Error in wrapper:', error);
+                    process.exit(1);
+                  }
+                }
+
+                // Execute main function
+                main();
+              `.trim()
+
+              // Copy load-aws-secrets.js to build/scripts/
+              await fs.ensureDir(path.join(rootDir, 'build/scripts'))
+              await fs.copy(
+                path.join(rootDir, 'src/scripts/load-aws-secrets.js'),
+                path.join(rootDir, 'build/scripts/load-aws-secrets.js')
+              )
+
+              // Create the wrapper file
+              await fs.writeFile(path.join(rootDir, 'build/wrapper.js'), wrapperContent)
+
               process.exit(1)
             }
           })

@@ -6,3 +6,4 @@ CHANGELOG.md merge=ours
 ISSUE_TEMPLATE.md merge=ours
 PULL_REQUEST_TEMPLATE.md merge=ours
 README.md merge=ours
+src/scripts/load-aws-secrets.js merge=ours

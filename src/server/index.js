@@ -18,9 +18,12 @@ import { createServerWorld } from '../core/createServerWorld'
 import { hashFile } from '../core/utils-server'
 import { getDB } from './db'
 
+const dataVolumeName = process.env.DATA_VOLUME_NAME || 'world';
+
 const rootDir = path.join(__dirname, '../')
-const worldDir = path.join(rootDir, 'world')
-const assetsDir = path.join(rootDir, 'world/assets')
+const dataDir = process.env.DATA_PATH || rootDir;
+const worldDir = path.join(dataDir, dataVolumeName)
+const assetsDir = path.join(rootDir, `${dataVolumeName}/assets`)
 const port = process.env.PORT
 
 await fs.ensureDir(worldDir)
@@ -97,7 +100,7 @@ fastify.get('/health', async (request, reply) => {
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
     }
-    
+
     return reply.code(200).send(health)
   } catch (error) {
     console.error('Health check failed:', error)

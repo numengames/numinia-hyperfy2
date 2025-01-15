@@ -81,16 +81,45 @@ The project can be run using Docker in two different ways: production mode and d
 
 ### Production Mode
 
-This mode is for production deployments where the source code is packaged inside the image:
+This mode is for production deployments where pm2 manages multiple processes (working for the moment with AWS).
 
 ```bash
-docker build -t hyperfy . && docker run -d -p 3000:3000 --env-file ./.env -v "$(pwd)/world:/app/world" hyperfy
+docker build -t hyperfy -f ./Dockerfile-pm2 . && docker run -d \
+  -p 3000:3000 \
+  -v "/path/to/your/ecosystem.config.json:/app/ecosystem.config.json" \
+  -v "$HOME/.aws/credentials:/root/.aws/credentials" \
+  -v "/path/to/your/world:/app/world" \
+  hyperfy
+```
+
+#### Volume Mounts Explanation:
+
+1. **PM2 Configuration**
+   - Local: `/path/to/your/ecosystem.config.json` (your PM2 configuration file)
+   - Container: `/app/ecosystem.config.json`
+
+2. **AWS Credentials**
+   - Local: `$HOME/.aws/credentials` (your AWS credentials file)
+   - Container: `/root/.aws/credentials`
+
+3. **World Data**
+   - Local: `/path/to/your/world` (your world data directory)
+   - Container: `/app/world`
+
+Example with real paths:
+```bash
+docker build -t hyperfy -f ./Dockerfile-pm2 . && docker run -d \
+  -p 3000:3000 \
+  -v "/Users/username/projects/hyperfy/ecosystem.config.json:/app/ecosystem.config.json" \
+  -v "$HOME/.aws/credentials:/root/.aws/credentials" \
+  -v "$(pwd)/world:/app/world" \
+  hyperfy
 ```
 
 This command:
 - Builds the Docker image with the 'hyperfy' tag
-- Mounts only the `world/` directory from the host
-- Loads environment variables from the `.env` file
+- Mounts the required configuration and data volumes
+- Loads environment variables from the ecosystem configuration
 - Exposes port 3000
 - Runs the container in detached mode (-d)
 
