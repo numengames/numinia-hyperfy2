@@ -1,0 +1,19 @@
+{
+  "apps": [
+    {
+      "watch": false,
+      "name": "alchemist-tower",
+      "autorestart": false,
+      "exec_mode": "cluster",
+      "script": "build/wrapper.js",
+      "instances": 1,
+      "env": {
+        "DATA_VOLUME_NAME": "alchemist-tower-data",
+        "DATA_PATH": "/app",
+        "AWS_SECRET_NAME": "hyperfy2-test",
+        "AWS_REGION": "eu-west-1",
+        "PORT": "3000"
+      }
+    }
+  ]
+}
