@@ -21,6 +21,16 @@ const clientBuildDir = path.join(rootDir, 'build/public')
 const clientHtmlSrc = path.join(rootDir, 'src/client/public/index.html')
 const clientHtmlDest = path.join(rootDir, 'build/public/index.html')
 
+console.log(process.env);
+console.log(dirname);
+console.log(rootDir);
+console.log(buildDir);
+console.log(clientPublicDir);
+console.log(clientBuildDir);
+console.log(clientHtmlSrc);
+console.log(clientHtmlDest);
+
+
 {
   // get all public app env variables
   const publicEnvs = {}

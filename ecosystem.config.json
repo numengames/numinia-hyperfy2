@@ -8,8 +8,8 @@
       "script": "build/wrapper.js",
       "instances": 1,
       "env": {
-        "DATA_VOLUME_NAME": "alchemist-tower-data",
-        "DATA_PATH": "/mnt/efs",
+        "DATA_VOLUME_NAME": "hyperfy2-persistent-storage",
+        "DATA_PATH": "/mnt",
         "AWS_SECRET_NAME": "hyperfy2-numinia-alchemist-tower",
         "AWS_REGION": "eu-west-1",
         "PORT": "3000"
