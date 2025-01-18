@@ -44,8 +44,6 @@ const clientHtmlDest = path.join(rootDir, 'build/public/index.html')
     jsx: 'automatic',
     jsxImportSource: '@firebolt-dev/jsx',
     define: {
-      'process': 'undefined',
-      'process.env': JSON.stringify(process.env),
       'process.env.CLIENT': 'true',
       'process.env.SERVER': 'false',
       ...publicEnvs,
@@ -128,7 +126,8 @@ let spawn
                 async function main() {
                   try {
                     // Wait for secrets to load
-                    await loadSecrets();
+                    // await loadSecrets();
+                    process.env.NODE_ENV = 'production';
                     
                     // Once secrets are loaded, import and execute index
                     await import('./index.js');

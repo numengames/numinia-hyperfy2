@@ -1,5 +1,4 @@
 .DS_Store
-.env*
 !.env.example
 *.notes.md
 node_modules/
