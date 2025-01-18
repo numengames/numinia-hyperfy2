@@ -26,13 +26,6 @@ const worldDir = path.join(dataDir, dataVolumeName)
 const assetsDir = path.join(rootDir, `${dataVolumeName}/assets`)
 const port = process.env.PORT
 
-console.log(process.env);
-console.log(rootDir);
-console.log(dataDir);
-console.log(worldDir);
-console.log(assetsDir);
-console.log(port);
-
 await fs.ensureDir(worldDir)
 await fs.ensureDir(assetsDir)
 
