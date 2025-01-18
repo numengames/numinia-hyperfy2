@@ -14,7 +14,6 @@ function App() {
   useEffect(() => {
     const viewport = viewportRef.current
     const ui = uiRef.current
-    console.log(process.env);
     const wsUrl = process.env.PUBLIC_WS_URL
     const apiUrl = process.env.PUBLIC_API_URL
     world.init({ viewport, ui, wsUrl, apiUrl, loadPhysX })

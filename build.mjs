@@ -44,7 +44,8 @@ const clientHtmlDest = path.join(rootDir, 'build/public/index.html')
     jsx: 'automatic',
     jsxImportSource: '@firebolt-dev/jsx',
     define: {
-      // 'process.env.NODE_ENV': '"development"',
+      'process': 'undefined',
+      'process.env': JSON.stringify(process.env),
       'process.env.CLIENT': 'true',
       'process.env.SERVER': 'false',
       ...publicEnvs,
