@@ -18,12 +18,15 @@ import { createServerWorld } from '../core/createServerWorld'
 import { hashFile } from '../core/utils-server'
 import { getDB } from './db'
 
-const dataVolumeName = process.env.DATA_VOLUME_NAME || 'world';
 
 const rootDir = path.join(__dirname, '../')
-const dataDir = process.env.DATA_PATH || rootDir;
-const worldDir = path.join(dataDir, dataVolumeName)
-const assetsDir = path.join(rootDir, `${dataVolumeName}/assets`)
+
+// const dataVolumeName = process.env.DATA_VOLUME_NAME || 'world';
+// const worldDir = path.join(rootDir, dataVolumeName)
+// const assetsDir = path.join(rootDir, `${dataVolumeName}/assets`)
+const worldDir = path.join(rootDir, 'world')
+const assetsDir = path.join(rootDir, 'world/assets')
+
 const port = process.env.PORT
 
 await fs.ensureDir(worldDir)

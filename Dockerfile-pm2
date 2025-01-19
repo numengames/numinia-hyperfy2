@@ -33,7 +33,8 @@ RUN apt-get update && apt-get install -y \
 COPY --from=build /app/build ./build
 
 # Copy package.json and package-lock.json
-COPY package.json package-lock.json .env ./
+COPY package.json package-lock.json ./
+COPY .env.forward ./.env
 
 # Copy src directory maintaining structure
 # TODO: Check if we can skip /core/assets folder to save space
@@ -44,13 +45,13 @@ RUN npm install -g pm2 \
     && npm install --only=production
 
 # Create startup script
-RUN echo '#!/bin/bash\n\
-    aws s3 cp s3://ecs.hyperfy2.numinia.xyz/${ECOSYSTEM_FILE} /app/ecosystem.config.json && \
-    chmod -R 770 /mnt/hyperfy2-persistent-storage && \
-    exec pm2-runtime ecosystem.config.json' > /app/start.sh && chmod +x /app/start.sh
+# RUN echo '#!/bin/bash\n\
+#     aws s3 cp s3://ecs.hyperfy2.numinia.xyz/${ECOSYSTEM_FILE} /app/ecosystem.config.json && \
+#     exec pm2-runtime ecosystem.config.json' > /app/start.sh && chmod +x /app/start.sh
 
 # Expose the port the app runs on (can be multiple ports depending on ecosystem.config.json processes)
 EXPOSE 3000
 
 # Start the application with debug logging
-CMD ["/app/start.sh"]
+# CMD ["/app/start.sh"]
+CMD ["pm2-runtime", "ecosystem.config.json"]
