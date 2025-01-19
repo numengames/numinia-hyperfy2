@@ -46,6 +46,9 @@ RUN npm install -g pm2 \
 # Create startup script
 RUN echo '#!/bin/bash\n\
     aws s3 cp s3://ecs.hyperfy2.numinia.xyz/${ECOSYSTEM_FILE} /app/ecosystem.config.json && \
+    sudo chmod -R 770 /mnt/efs/ && \
+    ls -l /mnt &&\
+    ls -l /mnt/hyperfy2-persistent-storage && \
     exec pm2-runtime ecosystem.config.json' > /app/start.sh && chmod +x /app/start.sh
 
 # Expose the port the app runs on (can be multiple ports depending on ecosystem.config.json processes)
