@@ -11,7 +11,7 @@ lockdown({
   // consoleTaming: 'unsafe',
   // evalTaming: 'unsafeEval',
   // // stackFiltering: ''
-  // overrideTaming: 'min',
+  overrideTaming: 'unsafe',
   // domainTaming: 'unsafe',
 
   // this is needed for monaco to work correctly.
