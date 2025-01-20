@@ -19,6 +19,7 @@ import { hashFile } from '../core/utils-server'
 import { getDB } from './db'
 
 const rootDir = process.env.DATA_PATH || path.join(__dirname, '../')
+const coreAssetsDir = path.join(__dirname, '../core/assets')
 
 const dataVolumeName = process.env.DATA_VOLUME_NAME || 'world';
 const worldDir = path.join(rootDir, dataVolumeName)
@@ -32,7 +33,12 @@ await fs.ensureDir(worldDir)
 await fs.ensureDir(assetsDir)
 
 // copy core assets
-await fs.copy(path.join(rootDir, 'src/core/assets'), path.join(assetsDir))
+if (await fs.exists(coreAssetsDir)) {
+  await fs.copy(coreAssetsDir, assetsDir)
+  console.log('✅ Core assets copied successfully')
+} else {
+  console.log('⚠️ Core assets directory not found:', coreAssetsDir)
+}
 
 const db = await getDB(path.join(worldDir, '/db.sqlite'))
 
