@@ -19,15 +19,26 @@ import { hashFile } from '../core/utils-server'
 import { getDB } from './db'
 
 const rootDir = path.join(__dirname, '../')
-const worldDir = path.join(rootDir, 'world')
-const assetsDir = path.join(rootDir, 'world/assets')
+
+const dataRootDir = process.env.STORAGE_PATH || rootDir
+const dataVolumeName = process.env.STORAGE_NAME || 'world'
+
+const worldDir = path.join(dataRootDir, dataVolumeName)
+const assetsDir = path.join(dataRootDir, `${dataVolumeName}/assets`)
+
 const port = process.env.PORT
 
 await fs.ensureDir(worldDir)
 await fs.ensureDir(assetsDir)
 
 // copy core assets
-await fs.copy(path.join(rootDir, 'src/core/assets'), path.join(assetsDir))
+if (await fs.exists(path.join(rootDir, 'src/core/assets'))) {
+  await fs.copy(path.join(rootDir, 'src/core/assets'), assetsDir)
+  console.log('✅ Core assets copied successfully')
+} else {
+  console.error('⚠️ Core assets directory not found:', path.join(rootDir, 'src/core/assets'))
+}
+
 
 const db = await getDB(path.join(worldDir, '/db.sqlite'))
 

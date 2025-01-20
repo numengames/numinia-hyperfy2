@@ -8,4 +8,5 @@ world
 *.md
 .eslintrc
 .prettierrc
-.eslintignore 
+.eslintignore
+.example.ecosystem.config.json
