@@ -1,4 +1,4 @@
-FROM node:22.11.0 AS build
+FROM node:22 AS build
 
 # Set the working directory
 WORKDIR /app
@@ -16,7 +16,7 @@ COPY . .
 RUN npm run build; exit 0
 
 # Stage 2: Run
-FROM node:22.11.0
+FROM node:22
 
 # Set the working directory
 WORKDIR /app
@@ -41,9 +41,10 @@ RUN npm install -g pm2 \
     && npm install --only=production
 
 # Create startup script
-RUN echo '#!/bin/bash\n\
+RUN echo '#!/bin/sh\n\
     node --experimental-vm-modules /app/src/scripts/index.mjs && \
-    exec pm2-runtime ecosystem.config.json' > /app/start.sh && chmod +x /app/start.sh
+    exec pm2-runtime ecosystem.config.json' > /app/start.sh && \
+    chmod +x /app/start.sh
 
 # Expose the port the app runs on (can be multiple ports depending on ecosystem.config.json processes)
 EXPOSE 3000
