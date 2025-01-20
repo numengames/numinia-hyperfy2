@@ -20,7 +20,7 @@ import { createEmoteFactory } from '../extras/createEmoteFactory'
 export class ServerLoader extends System {
   constructor(world) {
     super(world)
-    const rootDir = path.join(__dirname, '../')
+    const rootDir = process.env.DATA_PATH || path.join(__dirname, '../')
     const dataVolumeName = process.env.DATA_VOLUME_NAME || 'world';
     this.assetsDir = path.join(rootDir, `${dataVolumeName}/assets`)
     this.promises = new Map()

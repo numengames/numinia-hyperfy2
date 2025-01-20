@@ -18,7 +18,7 @@ import { createServerWorld } from '../core/createServerWorld'
 import { hashFile } from '../core/utils-server'
 import { getDB } from './db'
 
-const rootDir = path.join(__dirname, '../')
+const rootDir = process.env.DATA_PATH || path.join(__dirname, '../')
 
 const dataVolumeName = process.env.DATA_VOLUME_NAME || 'world';
 const worldDir = path.join(rootDir, dataVolumeName)
