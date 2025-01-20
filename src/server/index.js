@@ -72,6 +72,21 @@ fastify.register(multipart, {
 fastify.register(ws)
 fastify.register(worldNetwork)
 
+const publicEnvs = {}
+for (const key in process.env) {
+  if (key.startsWith('PUBLIC_')) {
+    const value = process.env[key]
+    publicEnvs[key] = value
+  }
+}
+const envsCode = `
+  if (!globalThis.process) globalThis.process = {}
+  globalThis.process.env = ${JSON.stringify(publicEnvs)}
+`
+fastify.get('/env.js', async (req, reply) => {
+  reply.type('application/javascript').send(envsCode)
+})
+
 fastify.post('/api/upload', async (req, reply) => {
   // console.log('DEBUG: slow uploads')
   // await new Promise(resolve => setTimeout(resolve, 2000))
@@ -109,7 +124,7 @@ fastify.get('/health', async (request, reply) => {
     console.error('Health check failed:', error)
     return reply.code(503).send({
       status: 'error',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     })
   }
 })
