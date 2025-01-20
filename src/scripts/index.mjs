@@ -1,4 +1,4 @@
-const loadConfigFromAWS = require('./load-config-from-aws.mjs')
+import loadConfigFromAWS from './load-config-from-aws.mjs'
 
 switch (process.env.CONFIG_PROVIDER) {
     case 'aws':
