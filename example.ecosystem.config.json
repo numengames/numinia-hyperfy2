@@ -8,18 +8,18 @@
             "script": "build/index.js",
             "instances": 1,
             "env": {
-                "DATA_VOLUME_NAME": "name",
+                "DATA_VOLUME_NAME": "name1",
                 "DATA_PATH": "/mnt/hyperfy2-persistent-storage",
-                "AWS_SECRET_NAME": "hyperfy2-numinia-silver-door",
+                "AWS_SECRET_NAME": "hyperfy2-name1",
                 "AWS_REGION": "eu-west-1",
                 "PORT": "3000"
             },
             "env_1": {
-                "DATA_VOLUME_NAME": "hyperfy",
+                "DATA_VOLUME_NAME": "name2",
                 "DATA_PATH": "/mnt/hyperfy2-persistent-storage",
-                "AWS_SECRET_NAME": "hyperfy2-numinia-silver-door",
+                "AWS_SECRET_NAME": "hyperfy2-name2",
                 "AWS_REGION": "eu-west-1",
-                "PORT": "3000"
+                "PORT": "3001"
             }
         }
     ]
