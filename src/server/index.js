@@ -21,7 +21,7 @@ import { getDB } from './db'
 const rootDir = path.join(__dirname, '../')
 
 const dataRootDir = process.env.STORAGE_PATH || rootDir
-const dataVolumeName = process.env.STORAGE_NAME || 'world'
+const dataVolumeName = process.env.STORAGE_DIRNAME || 'world'
 
 const worldDir = path.join(dataRootDir, dataVolumeName)
 const assetsDir = path.join(dataRootDir, `${dataVolumeName}/assets`)
