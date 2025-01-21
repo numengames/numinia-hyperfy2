@@ -2,6 +2,7 @@ import path from 'path';
 import fs from 'fs/promises';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
+import '@aws-sdk/crc64-nvme-crt';
 
 export default async function loadConfigFromAWS() {
     try {
