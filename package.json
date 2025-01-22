@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "type": "module",
   "main": "index.js",
-  "homepage": "https://github.com/hyperfy-xyz/hyperfy#readme",
+  "homepage": "https://github.com/numengames/numinia-hyperfy2#readme",
   "bugs": {
-    "url": "https://github.com/hyperfy-xyz/hyperfy/issues"
+    "url": "https://github.com/numengames/numinia-hyperfy2/issues"
   },
   "keywords": [
     "hyperfy",
@@ -27,6 +27,9 @@
     "check": "npm run lint && npm run format"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.731.1",
+    "@aws-sdk/client-secrets-manager": "^3.726.1",
+    "@aws-sdk/crc64-nvme-crt": "^3.370.0",
     "@fastify/compress": "^8.0.1",
     "@fastify/cors": "^10.0.1",
     "@fastify/multipart": "^9.0.1",
@@ -52,19 +55,19 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "ses": "^1.10.0",
+    "source-map-support": "^0.5.21",
     "three": "^0.170.0",
     "three-mesh-bvh": "^0.8.3"
   },
   "devDependencies": {
+    "@babel/eslint-parser": "^7.23.10",
+    "@babel/preset-react": "^7.23.10",
+    "esbuild": "^0.24.0",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-react": "^7.34.0",
     "eslint-plugin-react-hooks": "^4.6.0",
-    "@babel/eslint-parser": "^7.23.10",
-    "@babel/preset-react": "^7.23.10",
-    "esbuild": "^0.24.0",
-    "prettier": "^3.4.2",
-    "source-map-support": "^0.5.21"
+    "prettier": "^3.4.2"
   },
   "engines": {
     "npm": ">=10.0.0",

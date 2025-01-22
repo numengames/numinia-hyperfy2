@@ -19,15 +19,30 @@ import { hashFile } from '../core/utils-server'
 import { getDB } from './db'
 
 const rootDir = path.join(__dirname, '../')
-const worldDir = path.join(rootDir, 'world')
-const assetsDir = path.join(rootDir, 'world/assets')
+
+const dataRootDir = process.env.STORAGE_PATH || rootDir
+const dataVolumeName = process.env.STORAGE_DIRNAME || 'world'
+
+console.log(dataRootDir, dataVolumeName);
+
+const worldDir = path.join(dataRootDir, dataVolumeName)
+const assetsDir = path.join(dataRootDir, `${dataVolumeName}/assets`)
+
+console.log(worldDir, assetsDir);
+
 const port = process.env.PORT
 
 await fs.ensureDir(worldDir)
 await fs.ensureDir(assetsDir)
 
 // copy core assets
-await fs.copy(path.join(rootDir, 'src/core/assets'), path.join(assetsDir))
+if (await fs.exists(path.join(rootDir, 'src/core/assets'))) {
+  await fs.copy(path.join(rootDir, 'src/core/assets'), assetsDir)
+  console.log('✅ Core assets copied successfully')
+} else {
+  console.error('⚠️ Core assets directory not found:', path.join(rootDir, 'src/core/assets'))
+}
+
 
 const db = await getDB(path.join(worldDir, '/db.sqlite'))
 
@@ -66,6 +81,21 @@ fastify.register(multipart, {
 fastify.register(ws)
 fastify.register(worldNetwork)
 
+const publicEnvs = {}
+for (const key in process.env) {
+  if (key.startsWith('PUBLIC_')) {
+    const value = process.env[key]
+    publicEnvs[key] = value
+  }
+}
+const envsCode = `
+  if (!globalThis.process) globalThis.process = {}
+  globalThis.process.env = ${JSON.stringify(publicEnvs)}
+`
+fastify.get('/env.js', async (req, reply) => {
+  reply.type('application/javascript').send(envsCode)
+})
+
 fastify.post('/api/upload', async (req, reply) => {
   // console.log('DEBUG: slow uploads')
   // await new Promise(resolve => setTimeout(resolve, 2000))
@@ -86,6 +116,25 @@ fastify.post('/api/upload', async (req, reply) => {
   const exists = await fs.exists(filePath)
   if (!exists) {
     await fs.writeFile(filePath, buffer)
+  }
+})
+
+fastify.get('/health', async (request, reply) => {
+  try {
+    // Basic health check
+    const health = {
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+    }
+
+    return reply.code(200).send(health)
+  } catch (error) {
+    console.error('Health check failed:', error)
+    return reply.code(503).send({
+      status: 'error',
+      timestamp: new Date().toISOString(),
+    })
   }
 })
 
