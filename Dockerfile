@@ -47,7 +47,7 @@ RUN echo '#!/bin/sh\n\
     chmod +x /app/start.sh
 
 # Expose the port the app runs on (can be multiple ports depending on ecosystem.config.json processes)
-EXPOSE 3000
+EXPOSE 3000-3004
 
 # Start the application with debug logging
 CMD ["/app/start.sh"]
