@@ -13,9 +13,10 @@ export class Group extends Node {
 
   getProxy() {
     if (!this.proxy) {
-      const proxy = {
-        ...super.getProxy(),
+      let proxy = {
+        // ...
       }
+      proxy = Object.defineProperties(proxy, Object.getOwnPropertyDescriptors(super.getProxy())) // inherit Node properties
       this.proxy = proxy
     }
     return this.proxy

@@ -1,6 +1,6 @@
 import * as THREE from '../extras/three'
 
-import { Node } from './Node'
+import { getRef, Node } from './Node'
 
 const v0 = new THREE.Vector3()
 const v1 = new THREE.Vector3()
@@ -61,9 +61,15 @@ export class LOD extends Node {
 
   getProxy() {
     if (!this.proxy) {
-      const proxy = {
-        ...super.getProxy(),
+      const self = this
+      let proxy = {
+        insert(pNode, maxDistance) {
+          const node = getRef(pNode)
+          self.insert(node, maxDistance)
+          return this
+        },
       }
+      proxy = Object.defineProperties(proxy, Object.getOwnPropertyDescriptors(super.getProxy())) // inherit Node properties
       this.proxy = proxy
     }
     return this.proxy

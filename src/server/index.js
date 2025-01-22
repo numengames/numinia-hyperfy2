@@ -23,12 +23,8 @@ const rootDir = path.join(__dirname, '../')
 const dataRootDir = process.env.STORAGE_PATH || rootDir
 const dataVolumeName = process.env.STORAGE_DIRNAME || 'world'
 
-console.log(dataRootDir, dataVolumeName);
-
 const worldDir = path.join(dataRootDir, dataVolumeName)
 const assetsDir = path.join(dataRootDir, `${dataVolumeName}/assets`)
-
-console.log(worldDir, assetsDir);
 
 const port = process.env.PORT
 

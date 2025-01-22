@@ -81,21 +81,7 @@ export class PlayerLocal {
     this.base.position.fromArray(this.data.position)
     this.base.quaternion.fromArray(this.data.quaternion)
 
-    // temp
-    this.world.loader.load('vrm', 'asset://avatar.vrm').then(glb => {
-      this.vrm = glb.toNodes()
-      this.base.add(this.vrm)
-    })
-    // this.vrm = createNode({ name: 'mesh' })
-    // this.vrm.type = 'box'
-    // this.vrm.width = 0.3
-    // this.vrm.height = 1.6
-    // this.vrm.depth = 0.3
-    // this.vrm.position.y = 1.6 / 2
-    // this.vrm.material = this.world.stage.createMaterial({
-    //   internal: new THREE.MeshStandardMaterial({ color: 'white' }),
-    // })
-    // this.base.add(this.vrm)
+    this.applyVRM()
 
     this.base.activate({ world: this.world, physics: true, entity: this.entity })
 
@@ -113,6 +99,17 @@ export class PlayerLocal {
     this.initControl()
 
     this.world.setHot(this, true)
+  }
+
+  applyVRM() {
+    const vrmUrl = this.data.user.vrm || 'asset://avatar.vrm'
+    if (this.vrmUrl === vrmUrl) return
+    this.world.loader.load('vrm', vrmUrl).then(glb => {
+      if (this.vrm) this.vrm.deactivate()
+      this.vrm = glb.toNodes().get('vrm')
+      this.base.add(this.vrm)
+      this.vrmUrl = vrmUrl
+    })
   }
 
   initCapsule() {
@@ -564,6 +561,7 @@ export class PlayerLocal {
   modify(data) {
     if (data.hasOwnProperty('user')) {
       this.data.user = data.user
+      this.applyVRM()
     }
   }
 }

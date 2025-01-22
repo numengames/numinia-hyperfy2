@@ -10,12 +10,13 @@ const defaults = {
   depth: 1,
   radius: 0.5,
   geometry: null,
+  instance: true,
   castShadow: true,
   receiveShadow: true,
   visible: true,
 }
 
-const types = ['box', 'sphere', 'custom']
+const types = ['box', 'sphere', 'geometry']
 
 let boxes = {}
 const upsertBox = (width, height, depth) => {
@@ -46,6 +47,7 @@ export class Mesh extends Node {
     this.radius = isNumber(data.radius) ? data.radius : defaults.radius
     this.geometry = data.geometry || defaults.geometry
     this.material = data.material || null
+    this.instance = isBoolean(data.instance) ? data.instance : defaults.instance
     this.castShadow = isBoolean(data.castShadow) ? data.castShadow : defaults.castShadow
     this.receiveShadow = isBoolean(data.receiveShadow) ? data.receiveShadow : defaults.receiveShadow
     this.visible = isBoolean(data.visible) ? data.visible : defaults.visible
@@ -58,7 +60,7 @@ export class Mesh extends Node {
       geometry = upsertBox(this.width, this.height, this.depth)
     } else if (this.type === 'sphere') {
       geometry = upsertSphere(this.radius)
-    } else if (this.type === 'custom') {
+    } else if (this.type === 'geometry') {
       geometry = this.geometry
     }
 
@@ -67,9 +69,10 @@ export class Mesh extends Node {
     }
     const material = this.material.internal
 
-    this.instance = this.ctx.world.stage.insert({
+    this.handle = this.ctx.world.stage.insert({
       geometry,
       material,
+      instance: this.instance,
       castShadow: this.castShadow,
       receiveShadow: this.receiveShadow,
       matrix: this.matrixWorld,
@@ -86,16 +89,16 @@ export class Mesh extends Node {
       return
     }
     if (didMove) {
-      if (this.instance) {
-        this.instance.move(this.matrixWorld)
+      if (this.handle) {
+        this.handle.move(this.matrixWorld)
       }
     }
   }
 
   unmount() {
-    if (this.instance) {
-      this.instance.destroy()
-      this.instance = null
+    if (this.handle) {
+      this.handle.destroy()
+      this.handle = null
     }
   }
 
@@ -115,6 +118,7 @@ export class Mesh extends Node {
     this.radius = source.radius
     this.geometry = source.geometry
     this.material = source.material
+    this.instance = source.instance
     this.castShadow = source.castShadow
     this.receiveShadow = source.receiveShadow
     this.visible = source.visible
@@ -131,7 +135,7 @@ export class Mesh extends Node {
         set type(value) {
           if (!types.includes(value)) throw new Error(`[mesh] invalid type: ${value}`)
           self.type = value
-          if (self.instance) {
+          if (self.handle) {
             self.needsRebuild = true
             self.setDirty()
           }
@@ -141,7 +145,7 @@ export class Mesh extends Node {
         },
         set width(value) {
           self.width = value
-          if (self.instance && self.type === 'box') {
+          if (self.handle && self.type === 'box') {
             self.needsRebuild = true
             self.setDirty()
           }
@@ -151,7 +155,7 @@ export class Mesh extends Node {
         },
         set height(value) {
           self.height = value
-          if (self.instance && self.type === 'box') {
+          if (self.handle && self.type === 'box') {
             self.needsRebuild = true
             self.setDirty()
           }
@@ -161,7 +165,7 @@ export class Mesh extends Node {
         },
         set depth(value) {
           self.depth = value
-          if (self.instance && self.type === 'box') {
+          if (self.handle && self.type === 'box') {
             self.needsRebuild = true
             self.setDirty()
           }
@@ -170,7 +174,7 @@ export class Mesh extends Node {
           self.width = width
           self.height = height
           self.depth = depth
-          if (self.instance && self.type === 'box') {
+          if (self.handle && self.type === 'box') {
             self.needsRebuild = true
             self.setDirty()
           }
@@ -180,7 +184,7 @@ export class Mesh extends Node {
         },
         set radius(value) {
           self.radius = value
-          if (self.instance && self.type === 'sphere') {
+          if (self.handle && self.type === 'sphere') {
             self.needsRebuild = true
             self.setDirty()
           }
@@ -207,7 +211,7 @@ export class Mesh extends Node {
         },
         set castShadow(value) {
           self.castShadow = value
-          if (self.instance) {
+          if (self.handle) {
             self.needsRebuild = true
             self.setDirty()
           }
@@ -217,7 +221,7 @@ export class Mesh extends Node {
         },
         set receiveShadow(value) {
           self.receiveShadow = value
-          if (self.instance) {
+          if (self.handle) {
             self.needsRebuild = true
             self.setDirty()
           }

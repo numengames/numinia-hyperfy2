@@ -2,7 +2,7 @@ import { System } from './System'
 
 import * as THREE from '../extras/three'
 import { DEG2RAD, RAD2DEG } from '../extras/general'
-import { clamp, num } from '../utils'
+import { clamp, num, uuid } from '../utils'
 import { LerpVector3 } from '../extras/LerpVector3'
 import { LerpQuaternion } from '../extras/LerpQuaternion'
 
@@ -42,15 +42,21 @@ export class Scripts extends System {
       // Gradient: Gradient,
       DEG2RAD,
       RAD2DEG,
+      uuid,
       // pause: () => this.world.pause(),
     })
   }
 
   evaluate(code) {
-    return {
-      exec: this.compartment.evaluate(wrapRawCode(code)),
+    let value
+    const result = {
+      exec: (...args) => {
+        if (!value) value = this.compartment.evaluate(wrapRawCode(code))
+        return value(...args)
+      },
       code,
     }
+    return result
   }
 }
 
@@ -58,7 +64,7 @@ function wrapRawCode(code) {
   return `
   (function() {
     const shared = {}
-    return (world, app) => {
+    return (world, app, fetch) => {
       ${code}
     }
   })()

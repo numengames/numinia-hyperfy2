@@ -32,6 +32,8 @@ export class Chat extends System {
     if (broadcast) {
       this.world.network.send('chatAdded', msg)
     }
+    const readOnly = Object.freeze({ ...msg })
+    this.world.events.emit('chat', readOnly)
   }
 
   serialize() {

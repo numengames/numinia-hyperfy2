@@ -62,21 +62,33 @@ export class ClientEnvironment extends System {
     this.world.client.settings.on('change', this.onSettingsChange)
     this.world.graphics.on('resize', this.onViewportResize)
 
-    // TEMP: base environment
+    // TEMP: the following sets up a the base environment
+    // but eventually you'll do this with an environment app
+
+    // ground
     const glb = await this.world.loader.load('glb', '/base-environment.glb')
     const root = glb.toNodes()
     root.activate({ world: this.world, physics: true })
-
-    // {
-    //   // temp box
-    //   const geometry = new THREE.TorusKnotGeometry(10, 3, 100, 20)
-    //   const material = new THREE.MeshStandardMaterial({ color: 'red' })
-    //   // const material = new THREE.MeshBasicMaterial({ color: 'red' })
-    //   const mesh = new THREE.Mesh(geometry, material)
-    //   mesh.position.z = -50
-    //   this.world.stage.scene.add(mesh)
-    //   this.foo = mesh
-    // }
+    // sky
+    const skyUrl = '/day2-2k.jpg'
+    this.world.loader.load('tex', skyUrl).then(texture => {
+      texture = texture.clone()
+      texture.minFilter = texture.magFilter = THREE.LinearFilter
+      texture.mapping = THREE.EquirectangularReflectionMapping
+      // texture.encoding = Encoding[this.encoding]
+      texture.colorSpace = THREE.SRGBColorSpace
+      const geometry = new THREE.SphereGeometry(1000, 60, 40)
+      const material = new THREE.MeshBasicMaterial({ side: THREE.BackSide })
+      const mesh = new THREE.Mesh(geometry, material)
+      mesh.geometry.computeBoundsTree()
+      mesh.material.map = texture
+      mesh.material.needsUpdate = true
+      mesh.material.fog = false
+      mesh.material.toneMapped = false
+      mesh.matrixAutoUpdate = false
+      mesh.matrixWorldAutoUpdate = false
+      this.world.stage.scene.add(mesh)
+    })
   }
 
   update(delta) {

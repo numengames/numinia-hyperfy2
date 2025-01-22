@@ -12,34 +12,57 @@ import StatsGL from '../libs/stats-gl'
 export class ClientStats extends System {
   constructor(world) {
     super(world)
-    this.stats = new StatsGL({
-      logsPerSecond: 20,
-      samplesLog: 100,
-      samplesGraph: 10,
-      precision: 2,
-      horizontal: true,
-      minimal: false,
-      mode: 0,
-    })
+    this.stats = null
     this.ui = null
+    this.active = false
   }
 
   init({ ui }) {
     this.ui = ui
   }
 
-  start() {
-    this.stats.init(this.world.graphics.renderer, false)
+  enable() {
+    if (!this.stats) {
+      this.stats = new StatsGL({
+        logsPerSecond: 20,
+        samplesLog: 100,
+        samplesGraph: 10,
+        precision: 2,
+        horizontal: true,
+        minimal: false,
+        mode: 0,
+      })
+      this.stats.init(this.world.graphics.renderer, false)
+      this.stats.dom.style.position = 'absolute'
+    }
     this.ui.appendChild(this.stats.dom)
-    this.stats.dom.style.position = 'absolute'
+    this.active = true
+  }
+
+  disable() {
+    if (!this.active) return
+    this.ui.removeChild(this.stats.dom)
+    this.active = false
+  }
+
+  toggle() {
+    if (this.active) {
+      this.disable()
+    } else {
+      this.enable()
+    }
   }
 
   preTick() {
-    this.stats.begin()
+    if (this.active) {
+      this.stats.begin()
+    }
   }
 
   postTick() {
-    this.stats.end()
-    this.stats.update()
+    if (this.active) {
+      this.stats.end()
+      this.stats.update()
+    }
   }
 }

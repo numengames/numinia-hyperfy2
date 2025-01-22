@@ -11,5 +11,7 @@
 export const ControlPriorities = {
   PLAYER: 0,
   EDITOR: 1,
-  APP: 2,
+  ENTITY: 2,
+  APP: 3,
+  ACTION: 4,
 }

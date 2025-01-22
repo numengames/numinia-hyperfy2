@@ -170,13 +170,16 @@ export class RigidBody extends Node {
           if (!types.includes(value)) throw new Error(`[rigidbody] invalid type: ${value}`)
           const prev = self.type
           self.type = value
-          if ((prev === 'kinematic' || prev === 'dynamic') && (value === 'kinematic' || value === 'dynamic')) {
-            // kinematic <-> dynamic is just a flag change
-            self.actor.setRigidBodyFlag(PHYSX.PxRigidBodyFlagEnum.eKINEMATIC, value === 'kinematic')
-          } else {
-            self.needsRebuild = true
-            self.setDirty()
-          }
+          // NOTE: it might require more than a flag change, doesnt seem to work so we full rebuild
+          // if ((prev === 'kinematic' || prev === 'dynamic') && (value === 'kinematic' || value === 'dynamic')) {
+          //   // kinematic <-> dynamic is just a flag change
+          //   self.actor.setRigidBodyFlag(PHYSX.PxRigidBodyFlagEnum.eKINEMATIC, value === 'kinematic')
+          // } else {
+          //   self.needsRebuild = true
+          //   self.setDirty()
+          // }
+          self.needsRebuild = true
+          self.setDirty()
         },
         get mass() {
           return self.mass

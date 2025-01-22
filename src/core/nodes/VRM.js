@@ -64,12 +64,12 @@ export class VRM extends Node {
   getProxy() {
     if (!this.proxy) {
       const self = this
-      const proxy = {
-        ...super.getProxy(),
-        setEmote(id) {
-          return self.vrm?.setEmote(id)
+      let proxy = {
+        setEmote(url) {
+          return self.vrm?.setEmote(url)
         },
       }
+      proxy = Object.defineProperties(proxy, Object.getOwnPropertyDescriptors(super.getProxy())) // inherit Node properties
       this.proxy = proxy
     }
     return this.proxy

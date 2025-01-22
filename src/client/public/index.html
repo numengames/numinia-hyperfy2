@@ -12,6 +12,10 @@
     <!-- <link rel='icon' href='/favicon.ico' /> -->
     <link rel="stylesheet" type="text/css" href="/index.css?v={timestamp}" />
     <script src="https://cdn.jsdelivr.net/npm/ses@1.10.0/dist/ses.umd.min.js"></script>
+    <script type="module">
+      import Yoga from 'https://cdn.jsdelivr.net/npm/yoga-layout@3.2.1/+esm'
+      window.Yoga = Yoga
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -15,6 +15,7 @@ export class ClientNetwork extends System {
     this.ws = null
     this.apiUrl = null
     this.id = null
+    this.isClient = true
   }
 
   init({ wsUrl, apiUrl }) {
@@ -77,11 +78,18 @@ export class ClientNetwork extends System {
     entity.modify(data)
   }
 
+  onEntityEvent = event => {
+    const [id, version, name, data] = event
+    const entity = this.world.entities.get(id)
+    entity?.onEvent(version, name, data)
+  }
+
   onEntityRemoved = id => {
     this.world.entities.remove(id)
   }
 
-  onClose = () => {
-    console.log('connection ended')
+  onClose = code => {
+    this.world.emit('disconnect', code || true)
+    console.log('disconnect', code)
   }
 }

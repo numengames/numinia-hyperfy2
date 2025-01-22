@@ -1,9 +1,11 @@
 import { css } from '@firebolt-dev/css'
 import { useEffect, useRef, useState } from 'react'
-import { BoxIcon, EyeIcon, FileCode2Icon, XIcon } from 'lucide-react'
+import { BoxIcon, EyeIcon, FileCode2Icon, FileIcon, LoaderIcon, XIcon } from 'lucide-react'
 
 import { hashFile } from '../../core/utils-client'
 import { usePane } from './usePane'
+import { useUpdate } from './useUpdate'
+import { cls } from './cls'
 
 export function InspectPane({ world, entity }) {
   if (entity.isApp) {
@@ -14,6 +16,7 @@ export function InspectPane({ world, entity }) {
   }
 }
 
+const allowedModels = ['glb', 'vrm']
 export function AppPane({ world, app }) {
   const paneRef = useRef()
   const headRef = useRef()
@@ -25,15 +28,16 @@ export function AppPane({ world, app }) {
     const blueprint = app.blueprint
     const file = e.target.files[0]
     if (!file) return
-    if (!file.name.endsWith('.glb')) return
+    const ext = file.name.split('.').pop()
+    if (!allowedModels.includes(ext)) return
     // immutable hash the file
     const hash = await hashFile(file)
     // use hash as glb filename
-    const filename = `${hash}.glb`
+    const filename = `${hash}.${ext}`
     // canonical url to this file
     const url = `asset://${filename}`
     // cache file locally so this client can insta-load it
-    world.loader.insert('glb', url, file)
+    world.loader.insert(ext, url, file)
     // update blueprint locally (also rebuilds apps)
     const version = blueprint.version + 1
     world.blueprints.modify({ id: blueprint.id, version, model: url })
@@ -53,7 +57,6 @@ export function AppPane({ world, app }) {
         top: 20px;
         left: 20px;
         width: 320px;
-        height: 450px;
         background: rgba(22, 22, 28, 1);
         border: 1px solid rgba(255, 255, 255, 0.03);
         border-radius: 10px;
@@ -84,6 +87,7 @@ export function AppPane({ world, app }) {
         .apane-content {
           flex: 1;
           padding: 20px;
+          max-height: 500px;
           overflow-y: auto;
         }
         .apane-info {
@@ -127,9 +131,9 @@ export function AppPane({ world, app }) {
           border-radius: 10px;
           margin-left: 10px;
         }
-        .apane-dbl {
+        .apane-top {
           display: flex;
-          margin: -5px;
+          margin: -5px -5px 15px;
           &-item {
             flex-basis: 50%;
             padding: 5px;
@@ -145,7 +149,7 @@ export function AppPane({ world, app }) {
           display: flex;
           align-items: center;
           justify-content: center;
-          height: 85px;
+          height: 75px;
           overflow: hidden;
           cursor: pointer;
           &-icon {
@@ -171,7 +175,7 @@ export function AppPane({ world, app }) {
           display: flex;
           align-items: center;
           justify-content: center;
-          height: 85px;
+          height: 75px;
           cursor: pointer;
           &-icon {
             line-height: 0;
@@ -191,17 +195,17 @@ export function AppPane({ world, app }) {
         </div>
       </div>
       <div className='apane-content noscrollbar'>
-        <div className='apane-dbl'>
-          <div className='apane-dbl-item'>
+        <div className='apane-top'>
+          <div className='apane-top-item'>
             <label className='apane-model'>
-              <input type='file' accept='.glb' onChange={changeModel} />
+              <input type='file' accept='.glb,.vrm' onChange={changeModel} />
               <div className='apane-model-icon'>
                 <BoxIcon size={20} />
               </div>
               <span>Model</span>
             </label>
           </div>
-          <div className='apane-dbl-item'>
+          <div className='apane-top-item'>
             <div className='apane-script' onClick={() => world.emit('code', app)}>
               <div className='apane-script-icon'>
                 <FileCode2Icon size={20} />
@@ -210,6 +214,7 @@ export function AppPane({ world, app }) {
             </div>
           </div>
         </div>
+        <Fields app={app} />
         {/* <div className='apane-info'>
           <div className='apane-info-main'>
             <label className='apane-info-name'>
@@ -228,4 +233,351 @@ export function AppPane({ world, app }) {
 
 function PlayerPane({ world, player }) {
   return <div>PLAYER INSPECT</div>
+}
+
+function Fields({ app }) {
+  const world = app.world
+  const [blueprint, setBlueprint] = useState(app.blueprint)
+  const [fields, setFields] = useState(app.getConfig?.() || [])
+  const config = blueprint.config
+  useEffect(() => {
+    app.onConfigure = fn => setFields(fn?.() || [])
+    const onModify = bp => {
+      if (bp.id === blueprint.id) {
+        setBlueprint(bp)
+      }
+    }
+    world.blueprints.on('modify', onModify)
+    return () => {
+      world.blueprints.off('modify', onModify)
+    }
+  }, [])
+  const modify = (key, value) => {
+    if (config[key] === value) return
+    config[key] = value
+    // update blueprint locally (also rebuilds apps)
+    const id = blueprint.id
+    const version = blueprint.version + 1
+    world.blueprints.modify({ id, version, config })
+    // broadcast blueprint change to server + other clients
+    world.network.send('blueprintModified', { id, version, config })
+  }
+  return fields.map(field => (
+    <Field key={field.key} world={world} config={config} field={field} value={config[field.key]} modify={modify} />
+  ))
+}
+
+const fieldTypes = {
+  section: FieldSection,
+  text: FieldText,
+  textarea: FieldTextArea,
+  file: FieldFile,
+  switch: FieldSwitch,
+  empty: () => null,
+}
+
+function Field({ world, config, field, value, modify }) {
+  if (field.when) {
+    for (const rule of field.when) {
+      if (rule.op === 'eq' && config[rule.key] !== rule.value) {
+        return null
+      }
+    }
+  }
+  const FieldControl = fieldTypes[field.type] || fieldTypes.empty
+  return <FieldControl world={world} field={field} value={value} modify={modify} />
+}
+
+function FieldWithLabel({ label, children }) {
+  return (
+    <div
+      className='fieldwlabel'
+      css={css`
+        display: flex;
+        align-items: center;
+        margin: 0 0 10px;
+        .fieldwlabel-label {
+          width: 90px;
+          font-size: 14px;
+          color: rgba(255, 255, 255, 0.5);
+        }
+        .fieldwlabel-content {
+          flex: 1;
+        }
+      `}
+    >
+      <div className='fieldwlabel-label'>{label}</div>
+      <div className='fieldwlabel-content'>{children}</div>
+    </div>
+  )
+}
+
+function FieldSection({ world, field, value, modify }) {
+  return (
+    <div
+      className='fieldsection'
+      css={css`
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        margin: 20px 0 14px;
+        padding: 16px 0 0 0;
+        .fieldsection-label {
+          font-size: 14px;
+          font-weight: 400;
+          line-height: 1;
+        }
+      `}
+    >
+      <div className='fieldsection-label'>{field.label}</div>
+    </div>
+  )
+}
+
+function FieldText({ world, field, value, modify }) {
+  const [localValue, setLocalValue] = useState(value)
+  useEffect(() => {
+    if (localValue !== value) setLocalValue(value)
+  }, [value])
+  return (
+    <FieldWithLabel label={field.label}>
+      <label
+        css={css`
+          display: block;
+          background-color: #252630;
+          border-radius: 10px;
+          padding: 0 8px;
+          cursor: text;
+          input {
+            height: 34px;
+            font-size: 14px;
+          }
+        `}
+      >
+        <input
+          type='text'
+          value={localValue || ''}
+          onChange={e => setLocalValue(e.target.value)}
+          onKeyDown={e => {
+            if (e.code === 'Enter') {
+              modify(field.key, localValue)
+              e.target.blur()
+            }
+          }}
+          onBlur={e => {
+            modify(field.key, localValue)
+          }}
+        />
+      </label>
+    </FieldWithLabel>
+  )
+}
+
+function FieldTextArea({ world, field, value, modify }) {
+  const [localValue, setLocalValue] = useState(value)
+  useEffect(() => {
+    if (localValue !== value) setLocalValue(value)
+  }, [value])
+  return (
+    <FieldWithLabel label={field.label}>
+      <label
+        css={css`
+          display: block;
+          background-color: #252630;
+          border-radius: 10px;
+          cursor: text;
+          textarea {
+            padding: 6px 8px;
+            line-height: 1.4;
+            font-size: 14px;
+            min-height: 56px;
+            max-width: 100%;
+            min-width: 100%;
+          }
+        `}
+      >
+        <textarea
+          value={localValue || ''}
+          onChange={e => setLocalValue(e.target.value)}
+          onKeyDown={e => {
+            if (e.metaKey && e.code === 'Enter') {
+              modify(field.key, localValue)
+              e.target.blur()
+            }
+          }}
+          onBlur={e => {
+            modify(field.key, localValue)
+          }}
+        />
+      </label>
+    </FieldWithLabel>
+  )
+}
+
+const supportedFiles = ['glb', 'vrm']
+function FieldFile({ world, field, value, modify }) {
+  const nRef = useRef(0)
+  const update = useUpdate()
+  const [loading, setLoading] = useState(null)
+  const set = async e => {
+    // trigger input rebuild
+    const n = ++nRef.current
+    update()
+    // get file
+    const file = e.target.files[0]
+    if (!file) return
+    // check ext
+    const ext = file.name.split('.')[1]
+    if (!supportedFiles.includes(ext)) {
+      return console.error(`file extension not supported: ${ext}`)
+    }
+    // immutable hash the file
+    const hash = await hashFile(file)
+    // use hash as glb filename
+    const filename = `${hash}.${ext}`
+    // canonical url to this file
+    const url = `asset://${filename}`
+    // show loading
+    const newValue = {
+      name: file.name,
+      url,
+    }
+    setLoading(newValue)
+    // upload file
+    await world.network.upload(file)
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    // ignore if new value/upload
+    if (nRef.current !== n) return
+    // cache file locally so this client can insta-load it
+    world.loader.insert(ext, url, file)
+    // apply!
+    setLoading(null)
+    modify(field.key, newValue)
+  }
+  const remove = e => {
+    e.preventDefault()
+    e.stopPropagation()
+    modify(field.key, null)
+  }
+  const n = nRef.current
+  const label = loading?.name || value?.name
+  return (
+    <FieldWithLabel label={field.label}>
+      <label
+        className='field-file'
+        css={css`
+          position: relative;
+          overflow: hidden;
+          display: flex;
+          align-items: center;
+          height: 36px;
+          background-color: #252630;
+          border-radius: 10px;
+          padding: 0 0 0 8px;
+          input {
+            position: absolute;
+            top: -9999px;
+            left: -9999px;
+            opacity: 0;
+          }
+          svg {
+            line-height: 0;
+          }
+          .field-file-placeholder {
+            flex: 1;
+            font-size: 14px;
+            padding: 0 5px;
+            color: rgba(255, 255, 255, 0.5);
+          }
+          .field-file-name {
+            flex: 1;
+            font-size: 14px;
+            padding: 0 5px;
+          }
+          .field-file-x {
+            width: 30px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+          }
+          .field-file-loading {
+            width: 30px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            @keyframes spin {
+              from {
+                transform: rotate(0deg);
+              }
+              to {
+                transform: rotate(360deg);
+              }
+            }
+            svg {
+              animation: spin 1s linear infinite;
+            }
+          }
+        `}
+      >
+        <FileIcon size={14} />
+        {!value && !loading && <div className='field-file-placeholder'>{field.placeholder}</div>}
+        {label && <div className='field-file-name'>{label}</div>}
+        {value && !loading && (
+          <div className='field-file-x'>
+            <XIcon size={14} onClick={remove} />
+          </div>
+        )}
+        {loading && (
+          <div className='field-file-loading'>
+            <LoaderIcon size={14} />
+          </div>
+        )}
+        <input key={n} type='file' onChange={set} accept={field.accept} />
+      </label>
+    </FieldWithLabel>
+  )
+}
+
+function FieldSwitch({ world, field, value, modify }) {
+  return (
+    <FieldWithLabel label={field.label}>
+      <div
+        className='field-switch'
+        css={css`
+          display: flex;
+          align-items: center;
+          border: 1px solid #252630;
+          border-radius: 10px;
+          padding: 3px;
+          .field-switch-option {
+            flex: 1;
+            border-radius: 7px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            span {
+              line-height: 1;
+              font-size: 14px;
+            }
+            &.selected {
+              background: #252630;
+            }
+          }
+        `}
+      >
+        {field.options.map(option => (
+          <div
+            key={option.value}
+            className={cls('field-switch-option', { selected: value === option.value })}
+            onClick={() => modify(field.key, option.value)}
+          >
+            <span>{option.label}</span>
+          </div>
+        ))}
+      </div>
+    </FieldWithLabel>
+  )
 }

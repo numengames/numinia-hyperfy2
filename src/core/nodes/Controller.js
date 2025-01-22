@@ -98,8 +98,7 @@ export class Controller extends Node {
   getProxy() {
     if (!this.proxy) {
       const self = this
-      const proxy = {
-        ...super.getProxy(),
+      let proxy = {
         teleport(vec3) {
           return self.teleport(vec3)
         },
@@ -113,6 +112,7 @@ export class Controller extends Node {
           return self.moveFlags.isSet(PHYSX.PxControllerCollisionFlagEnum.eCOLLISION_UP)
         },
       }
+      proxy = Object.defineProperties(proxy, Object.getOwnPropertyDescriptors(super.getProxy())) // inherit Node properties
       this.proxy = proxy
     }
     return this.proxy

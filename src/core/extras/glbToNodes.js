@@ -56,7 +56,7 @@ export function glbToNodes(glb, world) {
         const node = registerNode({
           id: object3d.name,
           name: 'collider',
-          type: 'custom',
+          type: 'geometry',
           geometry: object3d.geometry,
           convex: props.convex,
           position: object3d.position.toArray(),
@@ -72,13 +72,15 @@ export function glbToNodes(glb, world) {
         if (props.wind) {
           addWind(object3d, world)
         }
+        const hasMorphTargets = object3d.morphTargetDictionary || object3d.morphTargetInfluences?.length > 0
         const material = getMaterial(object3d.material)
         const node = registerNode({
           id: object3d.name,
           name: 'mesh',
-          type: 'custom',
+          type: 'geometry',
           geometry: object3d.geometry,
           material,
+          instance: !hasMorphTargets,
           visible: props.visible,
           position: object3d.position.toArray(),
           quaternion: object3d.quaternion.toArray(),

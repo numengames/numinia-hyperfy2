@@ -2,6 +2,7 @@
 .env*
 !.env.example
 *.notes.md
+.notes/
 node_modules/
 build/
-world
+world*

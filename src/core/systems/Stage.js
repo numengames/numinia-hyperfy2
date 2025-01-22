@@ -65,13 +65,49 @@ export class Stage extends System {
     this.dirtyNodes.clear()
   }
 
-  insert({ geometry, material, castShadow, receiveShadow, node, matrix }) {
+  insert(options) {
+    if (options.instance) {
+      return this.insertInstance(options)
+    } else {
+      return this.insertSingle(options)
+    }
+  }
+
+  insertInstance({ geometry, material, castShadow, receiveShadow, node, matrix }) {
     const id = `${geometry.uuid}/${material.uuid}/${castShadow}/${receiveShadow}`
     if (!this.models.has(id)) {
       const model = new Model(this, geometry, material, castShadow, receiveShadow)
       this.models.set(id, model)
     }
     return this.models.get(id).create(node, matrix)
+  }
+
+  insertSingle({ geometry, material, castShadow, receiveShadow, node, matrix }) {
+    material.shadowSide = THREE.BackSide // fix csm shadow banding
+    const mesh = new THREE.Mesh(geometry, material)
+    mesh.castShadow = castShadow
+    mesh.receiveShadow = receiveShadow
+    mesh.matrixWorld.copy(matrix)
+    mesh.matrixAutoUpdate = false
+    mesh.matrixWorldAutoUpdate = false
+    const sItem = {
+      matrix,
+      geometry,
+      material,
+      getEntity: () => node.ctx.entity,
+    }
+    this.scene.add(mesh)
+    this.octree.insert(sItem)
+    return {
+      move: matrix => {
+        mesh.matrixWorld.copy(matrix)
+        this.octree.move(sItem)
+      },
+      destroy: () => {
+        this.scene.remove(mesh)
+        this.octree.remove(sItem)
+      },
+    }
   }
 
   createMaterial(options = {}) {

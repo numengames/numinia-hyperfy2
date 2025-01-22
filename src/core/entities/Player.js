@@ -19,7 +19,8 @@ export class Player extends Entity {
   }
 
   destroy(local) {
-    this.player.destroy()
+    this.player?.destroy()
+    this.player = null
     super.destroy(local)
   }
 }

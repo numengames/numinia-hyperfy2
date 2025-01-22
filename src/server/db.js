@@ -86,4 +86,25 @@ const migrations = [
       }
     }
   },
+  // add user.vrm field
+  async db => {
+    await db.schema.alterTable('users', table => {
+      table.string('vrm').nullable()
+    })
+  },
+  // add blueprint.config field
+  async db => {
+    const blueprints = await db('blueprints')
+    for (const blueprint of blueprints) {
+      const data = JSON.parse(blueprint.data)
+      if (data.config === undefined) {
+        data.config = {}
+        await db('blueprints')
+          .where('id', blueprint.id)
+          .update({
+            data: JSON.stringify(data),
+          })
+      }
+    }
+  },
 ]

@@ -34,7 +34,7 @@ export function CodePane({ entity, onClose }) {
     // broadcast blueprint change to server + other clients
     world.network.send('blueprintModified', { id: blueprint.id, version, script: url })
   }
-  usePane('code', paneRef, headRef)
+  usePane('code', paneRef, headRef, true)
   useEffect(() => {
     let dead
     load().then(monaco => {
@@ -84,6 +84,8 @@ export function CodePane({ entity, onClose }) {
         box-shadow: rgba(0, 0, 0, 0.5) 0px 10px 30px;
         pointer-events: auto;
         display: flex;
+        resize: both;
+        overflow: auto;
         flex-direction: column;
         .acode-head {
           height: 40px;

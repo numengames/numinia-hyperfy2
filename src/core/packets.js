@@ -10,6 +10,7 @@ const names = [
   'blueprintModified',
   'entityAdded',
   'entityModified',
+  'entityEvent',
   'entityRemoved',
 ]
 

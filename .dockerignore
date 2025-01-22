@@ -3,7 +3,6 @@ npm-debug.log
 world
 .git
 .gitignore
-.env
 .env.*
 *.md
 .eslintrc

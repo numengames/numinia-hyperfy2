@@ -1,6 +1,7 @@
 import * as THREE from './extras/three'
 import EventEmitter from 'eventemitter3'
 
+import { Events } from './systems/Events'
 import { Chat } from './systems/Chat'
 import { Blueprints } from './systems/Blueprints'
 import { Entities } from './systems/Entities'
@@ -12,7 +13,7 @@ export class World extends EventEmitter {
   constructor() {
     super()
 
-    this.maxDeltaTime = 1 / 3 // 0.33333
+    this.maxDeltaTime = 1 / 30 // 0.33333
     this.fixedDeltaTime = 1 / 50 // 0.01666
     this.frame = 0
     this.time = 0
@@ -25,6 +26,7 @@ export class World extends EventEmitter {
     this.camera = new THREE.PerspectiveCamera(70, 0, 0.01, 2000)
     this.rig.add(this.camera)
 
+    this.register('events', Events)
     this.register('scripts', Scripts)
     this.register('chat', Chat)
     this.register('blueprints', Blueprints)
@@ -152,6 +154,9 @@ export class World extends EventEmitter {
   }
 
   postLateUpdate(delta) {
+    for (const item of this.hot) {
+      item.postLateUpdate?.(delta)
+    }
     for (const system of this.systems) {
       system.postLateUpdate(delta)
     }

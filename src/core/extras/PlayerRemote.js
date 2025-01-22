@@ -21,11 +21,25 @@ export class PlayerRemote {
     this.quaternion = new LerpQuaternion(this.base.quaternion, this.world.networkRate)
     this.emote = 'asset://emote-idle.glb'
 
-    const glb = await this.world.loader.load('vrm', 'asset://avatar.vrm')
-    this.vrm = glb.toNodes()
-    this.base.add(this.vrm)
+    this.applyVRM()
 
     this.world.setHot(this, true)
+    this.world.events.emit('enter', {
+      id: this.data.user.id,
+      name: this.data.user.name,
+      networkId: this.data.owner,
+    })
+  }
+
+  applyVRM() {
+    const vrmUrl = this.data.user.vrm || 'asset://avatar.vrm'
+    if (this.vrmUrl === vrmUrl) return
+    this.world.loader.load('vrm', vrmUrl).then(glb => {
+      if (this.vrm) this.vrm.deactivate()
+      this.vrm = glb.toNodes().get('vrm')
+      this.base.add(this.vrm)
+      this.vrmUrl = vrmUrl
+    })
   }
 
   update(delta) {
@@ -49,6 +63,7 @@ export class PlayerRemote {
     }
     if (data.hasOwnProperty('user')) {
       this.data.user = data.user
+      this.applyVRM()
     }
   }
 
@@ -56,5 +71,10 @@ export class PlayerRemote {
     this.base.deactivate()
     this.vrm = null
     this.world.setHot(this, false)
+    this.world.events.emit('leave', {
+      id: this.data.user.id,
+      name: this.data.user.name,
+      networkId: this.data.owner,
+    })
   }
 }

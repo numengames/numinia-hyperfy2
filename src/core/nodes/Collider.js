@@ -25,7 +25,7 @@ const _v1 = new THREE.Vector3()
 const _v2 = new THREE.Vector3()
 const _q1 = new THREE.Quaternion()
 
-const types = ['box', 'sphere', 'custom']
+const types = ['box', 'sphere', 'geometry']
 
 const pxMeshes = {}
 function getPxMesh(world, geometry, convex) {
@@ -60,7 +60,7 @@ export class Collider extends Node {
       geometry = new PHYSX.PxBoxGeometry(this.width / 2, this.height / 2, this.depth / 2)
     } else if (this.type === 'sphere') {
       geometry = new PHYSX.PxSphereGeometry(this.radius)
-    } else if (this.type === 'custom') {
+    } else if (this.type === 'geometry') {
       const mesh = getPxMesh(this.ctx.world, this.geometry, this.convex)
       this.matrixWorld.decompose(_v1, _q1, _v2)
       const scale = new PHYSX.PxMeshScale(new PHYSX.PxVec3(_v2.x, _v2.y, _v2.z), new PHYSX.PxQuat(0, 0, 0, 1))
@@ -204,12 +204,17 @@ export class Collider extends Node {
         // set geometry(value) {
         //   throw new Error('[collider] cannot set geometry')
         // },
-        // get convex() {
-        //   return null
-        // },
-        // set convex(value) {
-        //   // ...
-        // },
+        get convex() {
+          return self.convex
+        },
+        set convex(value) {
+          if (self.convex === value) return
+          self.convex = value
+          if (self.shape) {
+            self.needsRebuild = true
+            self.setDirty()
+          }
+        },
         get trigger() {
           return self.trigger
         },
