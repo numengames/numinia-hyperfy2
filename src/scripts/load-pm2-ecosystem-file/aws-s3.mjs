@@ -13,7 +13,10 @@ export default async function loadConfigFromAWS() {
 
         // Download ecosystem file from S3
         console.log('📥 Downloading ecosystem file from S3...');
-        const s3Client = new S3Client({ region: 'eu-west-1' });
+        const s3Client = new S3Client({
+            region: 'eu-west-1',
+            responseChecksumValidation: "WHEN_REQUIRED"
+        });
         const s3Command = new GetObjectCommand({
             Bucket: process.env.ECOSYSTEM_FILE_BUCKET,
             Key: process.env.ECOSYSTEM_FILE_NAME

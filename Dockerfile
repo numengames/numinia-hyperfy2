@@ -41,7 +41,7 @@ RUN npm install -g pm2 && npm ci --only=production
 # Create startup script
 RUN echo '#!/bin/sh\n\
     echo "🔄 Running configuration script..."\n\
-    node --require @aws-sdk/crc64-nvme-crt --experimental-vm-modules /app/src/scripts/load-pm2-ecosystem-file/index.mjs\n\
+    node --experimental-vm-modules /app/src/scripts/load-pm2-ecosystem-file/index.mjs\n\
     exec pm2-runtime ecosystem.config.json' > /app/start.sh && \
     chmod +x /app/start.sh
 
