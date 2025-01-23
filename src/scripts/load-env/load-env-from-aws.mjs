@@ -1,7 +1,7 @@
 import '@aws-sdk/crc64-nvme-crt';
 import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
 
-async function loadEnvFromAWS() {
+export default async function loadEnvFromAWS() {
     const pm2Env = JSON.parse(process.env.pm2_env);
 
     const AWS_REGION = pm2Env.AWS_REGION;
@@ -32,5 +32,3 @@ async function loadEnvFromAWS() {
         throw error;
     }
 }
-
-export default loadEnvFromAWS;

@@ -40,7 +40,18 @@ RUN npm install -g pm2 && npm ci --only=production
 
 # Create startup script
 RUN echo '#!/bin/sh\n\
+    echo "🔄 Running configuration script..."\n\
     node --experimental-vm-modules /app/src/scripts/load-pm2-ecosystem-file/index.mjs\n\
+    \n\
+    # Wait for .env file to exist and be readable\n\
+    echo "⏳ Waiting for .env file..."\n\
+    while [ ! -f /app/.env ] || [ ! -r /app/.env ]; do\n\
+    sleep 5\n\
+    done\n\
+    echo "✅ .env file is ready"\n\
+    \n\
+    # Start PM2\n\
+    echo "🚀 Starting PM2..."\n\
     exec pm2-runtime ecosystem.config.json' > /app/start.sh && \
     chmod +x /app/start.sh
 
