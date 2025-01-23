@@ -11,6 +11,7 @@ export default async function loadConfigFromAWS() {
         }
 
         console.log('🚀 Starting config configuration...');
+        console.log('📂 Current working directory:', process.cwd());
 
         // Download ecosystem file from S3
         console.log('📥 Downloading ecosystem file from S3...');
@@ -25,7 +26,8 @@ export default async function loadConfigFromAWS() {
 
         // Write the ecosystem file
         const ecosystemPath = path.join(process.cwd(), 'ecosystem.config.json');
-        await fs.writeFile(ecosystemPath, ecosystemContent, { encoding: 'utf8', flag: 'w' });
+        console.log('📝 Writing ecosystem file to:', ecosystemPath);
+        await fs.writeFile(ecosystemPath, ecosystemContent, { encoding: 'utf8', flag: 'w', mode: 0o644 });
         console.log('✅ Ecosystem file written successfully');
 
         // Read and process the ecosystem file
@@ -58,10 +60,16 @@ export default async function loadConfigFromAWS() {
 
         // Write the .env file
         const envPath = path.join(process.cwd(), '.env');
-        await fs.writeFile(envPath, envContent, { encoding: 'utf8', flag: 'w' });
+        console.log('📝 Writing .env file to:', envPath);
 
-        console.log('✅ Secrets written to .env file successfully');
-        console.log('🎉 Configuration completed successfully!');
+        try {
+            await fs.writeFile(envPath, envContent, { encoding: 'utf8', flag: 'w', mode: 0o644 });
+            console.log('✅ Secrets written to .env file successfully');
+            console.log('🎉 Configuration completed successfully!');
+        } catch (error) {
+            console.error('❌ Error writing or verifying .env file:', error);
+            throw error;
+        }
     } catch (error) {
         console.error('❌ Error:', error);
         process.exit(1);
