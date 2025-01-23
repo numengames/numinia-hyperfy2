@@ -35,9 +35,8 @@ COPY package.json package-lock.json ./
 # Copy src directory maintaining structure
 COPY src ./src
 
-# Install only production dependencies
-RUN npm install -g pm2 \
-    && npm install --only=production
+# Install PM2 globally and production dependencies
+RUN npm install -g pm2 && npm ci --only=production
 
 # Create startup script
 RUN echo '#!/bin/sh\n\
