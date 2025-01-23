@@ -1,8 +1,8 @@
-import loadConfigFromAWS from './load-config-from-aws.mjs'
+import loadEnvFromAWS from './load-env-from-aws.mjs'
 
 switch (process.env.CONFIG_PROVIDER) {
     case 'aws':
-        await loadConfigFromAWS()
+        await loadEnvFromAWS()
         break
     default:
         console.log('No config provider specified')
