@@ -35,16 +35,9 @@ COPY package.json package-lock.json ./
 # Copy src directory maintaining structure
 COPY src ./src
 
-# Create necessary directories and set permissions
-RUN chown -R node:node /app && \
-    chmod -R 755 /app
-
 # Install only production dependencies
 RUN npm install -g pm2 \
     && npm install --only=production
-
-# Switch to non-root user
-USER node
 
 # Create startup script
 RUN echo '#!/bin/sh\n\
