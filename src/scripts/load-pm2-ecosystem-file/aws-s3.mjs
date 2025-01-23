@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs/promises';
-import '@aws-sdk/crc64-nvme-crt';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
+import '@aws-sdk/crc64-nvme-crt';
 
 export default async function loadConfigFromAWS() {
     try {
