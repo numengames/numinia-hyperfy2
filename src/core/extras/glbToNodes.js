@@ -3,24 +3,10 @@ import { createNode } from './createNode'
 const groupTypes = ['Scene', 'Group', 'Object3D']
 
 export function glbToNodes(glb, world) {
-  const nodes = new Map()
   function registerNode(data) {
     const node = createNode(data)
-    if (nodes.has(node.id)) {
-      console.error('node with id already exists:', node.id)
-      return
-    }
-    nodes.set(node.id, node)
     return node
   }
-  const materials = {}
-  function getMaterial(threeMaterial) {
-    if (!materials[threeMaterial.uuid]) {
-      materials[threeMaterial.uuid] = world.stage.createMaterial({ internal: threeMaterial })
-    }
-    return materials[threeMaterial.uuid]
-  }
-
   function parse(object3ds, parentNode) {
     for (const object3d of object3ds) {
       const props = object3d.userData || {}
@@ -51,7 +37,10 @@ export function glbToNodes(glb, world) {
         parse(object3d.children, node)
       }
       // Collider (custom node)
-      else if (props.node === 'collider') {
+      else if (props.node === 'collider' && object3d.isMesh) {
+        // NOTE: in blender if you export a single object with node:collider but it has multiple materials, it converts this into a Group with one Mesh for each material.
+        // but since the Group is the one that has the collider custom property, it won't work as expected. we could hack to fix this, but i think it adds a layer of indirection.
+        // colliders should not have materials on them.
         // console.error('TODO: glbToNodes collider for box/sphere in blender?')
         const node = registerNode({
           id: object3d.name,
@@ -59,6 +48,7 @@ export function glbToNodes(glb, world) {
           type: 'geometry',
           geometry: object3d.geometry,
           convex: props.convex,
+          trigger: props.trigger,
           position: object3d.position.toArray(),
           quaternion: object3d.quaternion.toArray(),
           scale: object3d.scale.toArray(),
@@ -73,14 +63,13 @@ export function glbToNodes(glb, world) {
           addWind(object3d, world)
         }
         const hasMorphTargets = object3d.morphTargetDictionary || object3d.morphTargetInfluences?.length > 0
-        const material = getMaterial(object3d.material)
         const node = registerNode({
           id: object3d.name,
           name: 'mesh',
           type: 'geometry',
           geometry: object3d.geometry,
-          material,
-          instance: !hasMorphTargets,
+          material: object3d.material,
+          linked: !hasMorphTargets,
           visible: props.visible,
           position: object3d.position.toArray(),
           quaternion: object3d.quaternion.toArray(),
