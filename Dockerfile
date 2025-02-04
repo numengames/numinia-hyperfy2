@@ -31,6 +31,9 @@ COPY package.json package-lock.json ./
 # Install only production dependencies
 RUN npm install --only=production
 
+# Create empty .env file
+RUN touch .env
+
 # Expose the port the app runs on
 EXPOSE 3000
 
