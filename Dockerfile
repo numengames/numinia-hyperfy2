@@ -56,6 +56,9 @@ RUN echo '#!/bin/sh\n\
     exec pm2-runtime ecosystem.config.json' > /app/start.sh && \
     chmod +x /app/start.sh
 
+# Create empty .env file
+RUN touch .env
+
 # Expose the port the app runs on
 EXPOSE 3000-3004
 
