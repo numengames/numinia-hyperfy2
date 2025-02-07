@@ -114,8 +114,8 @@ export class ServerLoader extends System {
           const glb = {
             toNodes: () => {
               if (!node) {
-                node = createNode({ name: 'group' })
-                const node2 = createNode({ id: 'avatar', name: 'avatar', factory: null })
+                node = createNode('group')
+                const node2 = createNode('avatar', { id: 'avatar', factory: null })
                 node.add(node2)
               }
               return node.clone(true)
@@ -138,6 +138,11 @@ export class ServerLoader extends System {
         } catch (err) {
           reject(err)
         }
+      })
+    }
+    if (type === 'audio') {
+      promise = new Promise(async (resolve, reject) => {
+        reject(null)
       })
     }
     this.promises.set(key, promise)

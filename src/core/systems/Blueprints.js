@@ -63,8 +63,8 @@ export class Blueprints extends System {
         if (data.script) {
           preloads.push({ type: 'script', url: data.script })
         }
-        for (const value of Object.values(data.config || {})) {
-          if (!value.url || !value.type) continue
+        for (const value of Object.values(data.props || {})) {
+          if (value === undefined || value === null || !value?.url || !value?.type) continue
           preloads.push({ type: value.type, url: value.url })
         }
       }
