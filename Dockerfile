@@ -53,5 +53,5 @@ ENV COMMIT_HASH=${COMMIT_HASH:-local}
 # Expose the port the app runs on
 EXPOSE 3000-3004
 
-# Start the application
-CMD [ "npm", "run", "start" ]
+# Start the application with debug logging
+CMD ["/app/start.sh"]
