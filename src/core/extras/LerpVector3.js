@@ -36,17 +36,23 @@ export class LerpVector3 {
     this.time = 0
   }
 
-  snap() {
-    this.previous.copy(this.value)
-    this.current.copy(this.value)
-    this.time = 0
-  }
-
   update(delta) {
     this.time += delta
     let alpha = this.time / this.rate
     if (alpha > 1) alpha = 1
     this.value.lerpVectors(this.previous, this.current, alpha)
     return this
+  }
+
+  snap() {
+    this.previous.copy(this.current)
+    this.value.copy(this.current)
+    this.time = 0
+  }
+
+  clear() {
+    this.previous.copy(this.value)
+    this.current.copy(this.value)
+    this.time = 0
   }
 }
