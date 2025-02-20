@@ -1,4 +1,4 @@
-FROM node:22-alpine AS build
+FROM node:22 AS build
 RUN apk add --no-cache curl
 
 # Set the working directory
@@ -17,7 +17,7 @@ COPY . .
 RUN npm run build; exit 0
 
 # Stage 2: Run
-FROM node:22-alpine
+FROM node:22
 
 # Set the working directory
 WORKDIR /app
