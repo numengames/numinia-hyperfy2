@@ -1,5 +1,4 @@
-FROM node:22-alpine AS build
-RUN apk add --no-cache curl
+FROM node:22 AS build
 
 # Set the working directory
 WORKDIR /app
@@ -17,13 +16,15 @@ COPY . .
 RUN npm run build; exit 0
 
 # Stage 2: Run
-FROM node:22-alpine
+FROM node:22
 
 # Set the working directory
 WORKDIR /app
 
-RUN apk add --no-cache \
-  aws-cli
+# Install AWS CLI
+RUN apt-get update && apt-get install -y \
+    awscli \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy the build folder from the previous stage
 COPY --from=build /app/build ./build
@@ -39,16 +40,13 @@ RUN npm install -g pm2 && npm ci --only=production
 
 # Create startup script
 RUN echo '#!/bin/sh\n\
-  echo "🔄 Running configuration script..."\n\
-  node --experimental-vm-modules /app/src/scripts/load-pm2-ecosystem-file/index.mjs\n\
-  exec pm2-runtime ecosystem.config.json' > /app/start.sh && \
-  chmod +x /app/start.sh
+    echo "🔄 Running configuration script..."\n\
+    node --experimental-vm-modules /app/src/scripts/load-pm2-ecosystem-file/index.mjs\n\
+    exec pm2-runtime ecosystem.config.json' > /app/start.sh && \
+    chmod +x /app/start.sh
 
 # Expose the port the app runs on
 EXPOSE 3000-3004
-
-HEALTHCHECK --interval=2s --timeout=10s --start-period=5s --retries=5 \
-  CMD curl -f http://localhost:3000/status || exit 1
 
 # Start the application with debug logging
 CMD ["/app/start.sh"]
