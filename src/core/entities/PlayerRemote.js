@@ -3,8 +3,8 @@ import { Entity } from './Entity'
 import { createNode } from '../extras/createNode'
 import { LerpQuaternion } from '../extras/LerpQuaternion'
 import { LerpVector3 } from '../extras/LerpVector3'
-import { emotes } from '../extras/playerEmotes'
 import { createPlayerProxy } from '../extras/createPlayerProxy'
+import { Emotes } from '../extras/playerEmotes'
 
 let capsuleGeometry
 {
@@ -44,7 +44,7 @@ export class PlayerRemote extends Entity {
     // })
     // this.base.add(this.caps)
 
-    this.nametag = createNode('nametag', { label: this.data.user.name, active: false })
+    this.nametag = createNode('nametag', { label: this.data.name, active: false })
     this.base.add(this.nametag)
 
     this.bubble = createNode('ui', {
@@ -86,7 +86,7 @@ export class PlayerRemote extends Entity {
   }
 
   applyAvatar() {
-    const avatarUrl = this.data.user.avatar || 'asset://avatar.vrm'
+    const avatarUrl = this.data.sessionAvatar || this.data.avatar || 'asset://avatar.vrm'
     if (this.avatarUrl === avatarUrl) return
     this.world.loader.load('avatar', avatarUrl).then(src => {
       if (this.avatar) this.avatar.deactivate()
@@ -101,13 +101,26 @@ export class PlayerRemote extends Entity {
     })
   }
 
+  getAnchorMatrix() {
+    if (this.effect?.anchorId) {
+      return this.world.anchors.get(this.effect.anchorId)
+    }
+  }
+
   update(delta) {
-    this.position.update(delta)
-    this.quaternion.update(delta)
-    this.avatar?.setEmote(emotes[this.emote])
+    const anchor = this.getAnchorMatrix()
+    if (anchor) {
+      this.base.position.setFromMatrixPosition(anchor)
+      this.base.quaternion.setFromRotationMatrix(anchor)
+    } else {
+      this.position.update(delta)
+      this.quaternion.update(delta)
+    }
+    this.avatar?.setEmote(this.emote)
   }
 
   modify(data) {
+    let avatarChanged
     if (data.hasOwnProperty('t')) {
       this.teleport++
     }
@@ -123,9 +136,26 @@ export class PlayerRemote extends Entity {
       this.data.emote = data.e
       this.emote = data.e
     }
-    if (data.hasOwnProperty('user')) {
-      this.data.user = data.user
-      this.nametag.label = data.user.name
+    if (data.hasOwnProperty('ef')) {
+      this.data.effect = data.ef
+      this.effect = data.ef
+    }
+    if (data.hasOwnProperty('name')) {
+      this.data.name = data.name
+      this.nametag.label = data.name
+    }
+    if (data.hasOwnProperty('avatar')) {
+      this.data.avatar = data.avatar
+      avatarChanged = true
+    }
+    if (data.hasOwnProperty('sessionAvatar')) {
+      this.data.sessionAvatar = data.sessionAvatar
+      avatarChanged = true
+    }
+    if (data.hasOwnProperty('roles')) {
+      this.data.roles = data.roles
+    }
+    if (avatarChanged) {
       this.applyAvatar()
     }
   }
