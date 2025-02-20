@@ -1,4 +1,4 @@
-FROM node:22 AS build
+FROM node:22-alpine AS build
 RUN apk add --no-cache curl
 
 # Set the working directory
@@ -17,15 +17,13 @@ COPY . .
 RUN npm run build; exit 0
 
 # Stage 2: Run
-FROM node:22
+FROM node:22-alpine
 
 # Set the working directory
 WORKDIR /app
 
-# Install AWS CLI
-RUN apt-get update && apt-get install -y \
-  awscli \
-  && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache \
+  aws-cli
 
 # Copy the build folder from the previous stage
 COPY --from=build /app/build ./build
