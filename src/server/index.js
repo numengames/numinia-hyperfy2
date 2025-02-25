@@ -22,7 +22,10 @@ const rootDir = path.join(__dirname, '../')
 const worldDir = path.join(rootDir, process.env.WORLD)
 const assetsDir = path.join(worldDir, '/assets')
 const port = process.env.PORT
-const basePath = process.env.BASE_PATH || '/'
+// Ensure BASE_PATH always starts and ends with /
+const basePath = process.env.BASE_PATH ? 
+  `/${process.env.BASE_PATH.replace(/^\/+|\/+$/g, '')}/` : 
+  '/'
 
 await fs.ensureDir(worldDir)
 await fs.ensureDir(assetsDir)
