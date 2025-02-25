@@ -22,10 +22,7 @@ const rootDir = path.join(__dirname, '../')
 const worldDir = path.join(rootDir, process.env.WORLD)
 const assetsDir = path.join(worldDir, '/assets')
 const port = process.env.PORT
-// Ensure BASE_PATH always starts and ends with /
-const basePath = process.env.BASE_PATH ? 
-  `/${process.env.BASE_PATH.replace(/^\/+|\/+$/g, '')}/` : 
-  '/'
+const basePath = process.env.BASE_PATH || '/'
 
 await fs.ensureDir(worldDir)
 await fs.ensureDir(assetsDir)
@@ -54,7 +51,7 @@ fastify.register(statics, {
 })
 fastify.register(statics, {
   root: assetsDir,
-  prefix: path.join(basePath, 'assets/').replace(/\\/g, '/'),
+  prefix: `${basePath}/assets`,
   decorateReply: false,
   setHeaders: res => {
     // all assets are hashed & immutable so we can use aggressive caching
@@ -165,6 +162,19 @@ fastify.get(path.join(basePath, 'status'), async (request, reply) => {
 fastify.setErrorHandler((err, req, reply) => {
   console.error(err)
   reply.status(500).send()
+})
+
+// Add catch-all route for client-side routing
+fastify.get('*', async (request, reply) => {
+  const requestPath = request.url
+
+  // Skip if it's an API route or asset route
+  if (requestPath.startsWith(`${basePath}/api/`) || requestPath.startsWith(`${basePath}/assets/`)) {
+    return reply.status(404).send({ message: `Route ${request.method}:${requestPath} not found`, error: 'Not Found', statusCode: 404 })
+  }
+  
+  // Serve index.html for all routes
+  return reply.sendFile('index.html', path.join(__dirname, 'public'))
 })
 
 try {

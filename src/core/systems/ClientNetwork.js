@@ -24,11 +24,9 @@ export class ClientNetwork extends System {
   init({ wsUrl, apiUrl }) {
     const authToken = storage.get('authToken')
     this.apiUrl = apiUrl
-    // Ensure BASE_PATH always starts and ends with /
-    const basePath = process.env.BASE_PATH ? 
-      `/${process.env.BASE_PATH.replace(/^\/+|\/+$/g, '')}/` : 
-      '/'
-    const wsUrlWithBase = `${wsUrl}${wsUrl.endsWith('/') ? '' : '/'}${basePath.replace(/^\/|\/$/g, '')}ws`
+    // Use BASE_PATH exactly as provided or '/' if not set
+    const basePath = process.env.BASE_PATH || '/'
+    const wsUrlWithBase = `${wsUrl}${wsUrl.endsWith('/') ? '' : '/'}${basePath}ws`
     this.ws = new WebSocket(`${wsUrlWithBase}?authToken=${authToken}`)
     this.ws.binaryType = 'arraybuffer'
     this.ws.addEventListener('message', this.onPacket)
@@ -46,16 +44,14 @@ export class ClientNetwork extends System {
   }
 
   async upload(file) {
-    // Ensure BASE_PATH always starts and ends with /
-    const basePath = process.env.BASE_PATH ? 
-      `/${process.env.BASE_PATH.replace(/^\/+|\/+$/g, '')}/` : 
-      '/'
+    // Use BASE_PATH exactly as provided or '/' if not set
+    const basePath = process.env.BASE_PATH || '/'
     {
       // first check if we even need to upload it
       const hash = await hashFile(file)
       const ext = file.name.split('.').pop().toLowerCase()
       const filename = `${hash}.${ext}`
-      const url = `${this.apiUrl}${this.apiUrl.endsWith('/') ? '' : '/'}${basePath.replace(/^\/|\/$/g, '')}api/upload-check?filename=${filename}`
+      const url = `${this.apiUrl}${this.apiUrl.endsWith('/') ? '' : '/'}${basePath}api/upload-check?filename=${filename}`
       const resp = await fetch(url)
       const data = await resp.json()
       if (data.exists) return // console.log('already uploaded:', filename)
@@ -63,7 +59,7 @@ export class ClientNetwork extends System {
     // then upload it
     const form = new FormData()
     form.append('file', file)
-    const url = `${this.apiUrl}${this.apiUrl.endsWith('/') ? '' : '/'}${basePath.replace(/^\/|\/$/g, '')}api/upload`
+    const url = `${this.apiUrl}${this.apiUrl.endsWith('/') ? '' : '/'}${basePath}api/upload`
     await fetch(url, {
       method: 'POST',
       body: form,
