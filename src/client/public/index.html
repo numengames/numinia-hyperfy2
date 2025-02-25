@@ -9,8 +9,8 @@
     />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <!-- <link rel='icon' href='/favicon.ico' /> -->
-    <link rel="stylesheet" type="text/css" href="/index.css?v={buildId}" />
+    <!-- <link rel='icon' href='./favicon.ico' /> -->
+    <link rel="stylesheet" type="text/css" href="./index.css?v={buildId}" />
     <script src="https://cdn.jsdelivr.net/npm/ses@1.10.0/dist/ses.umd.min.js"></script>
     <script type="module">
       import Yoga from 'https://cdn.jsdelivr.net/npm/yoga-layout@3.2.1/+esm'
@@ -19,8 +19,12 @@
   </head>
   <body>
     <div id="root"></div>
-    <script src="/physx-js-webidl.js"></script>
-    <script src="/env.js?v={buildId}"></script>
+    <script>
+      // Inject base path for resources
+      window.BASE_PATH = '{basePath}';
+    </script>
+    <script src="./physx-js-webidl.js"></script>
+    <script src="./env.js?v={buildId}"></script>
     <script src="{jsFile}"></script>
   </body>
 </html>
