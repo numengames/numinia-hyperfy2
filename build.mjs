@@ -36,6 +36,7 @@ const clientHtmlDest = path.join(rootDir, 'build/public/index.html')
     jsx: 'automatic',
     jsxImportSource: '@firebolt-dev/jsx',
     define: {
+      // 'process.env.NODE_ENV': '"development"',
       'process.env.BASE_PATH': `"${process.env.BASE_PATH || '/'}"`,
     },
     loader: {
