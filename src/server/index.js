@@ -75,7 +75,7 @@ for (const key in process.env) {
   }
 }
 // Add BASE_PATH to public envs
-publicEnvs.PUBLIC_BASE_PATH = basePath
+publicEnvs.BASE_PATH = basePath
 
 const envsCode = `
   if (!globalThis.process) globalThis.process = {}
