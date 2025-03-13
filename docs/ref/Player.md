@@ -1,22 +1,12 @@
 # Player
 
-Represents a player. An instance of Player can be retrived from events or via [World.getPlayer](/docs/ref/World.md)
-
-NOTE: Setting/modifying the geometry are not currently supported, and only be configured within a GLTF (eg via blender).
+Represents a player. An instance of Player can be retrived via [World.getPlayer](/docs/ref/World.md)
 
 ## Properties
 
-### `.networkId`: String
-
-A completely unique ID that is given to every player each time they connect.
-
-### `.entityId`: String
-
-The entity's ID.
-
 ### `.id`: String
 
-The player ID. This ID is the same each time the player enters the world.
+The players unique ID. This is always the same for the same player, even when they leave and come back.
 
 ### `.name`: String
 
@@ -38,15 +28,25 @@ The players rotation in the world.
 
 ### `.teleport(position, rotationY)`
 
-Teleports the player instantly to the new position. The `rotationY` value is in radians, and if omitted the player will continue facing their current direction.
+Teleports the player instantly to the new position. The `rotationY` value is in radians, and if omitted the player will continue facing their current direction.    
 
-### `.hasEffect()`: Boolean
+### `.getBoneTransform(boneName)`: Matrix4
 
-Whether the player currently has an active effect.
+Returns a matrix of the bone transform in world space.
 
-### `.setEffect({ anchor, emote, snare, freeze, duration, cancellable })`
+See [Avatar](/docs/ref/Avatar.md) for full details.
 
-Sets an effect on the player. If the player already had an effect, it is replaced. If this function is called with `null` it removes any active effect.
+### `.damage(amount)`
+
+Removes health from the player. Health cannot go below zero.
+
+### `.heal(amount)`
+
+Adds health to the player. Health cannot go above 100.
+
+### `.applyEffect({ anchor, emote, snare, freeze, turn, duration, cancellable, onEnd })`
+
+Applies an effect to the player. If the player already has an effect, it is replaced. If this function is called with `null` it removes any active effect.
 
 All options are optional.
 
@@ -58,13 +58,13 @@ All options are optional.
 
 **freeze**: when true, the player is frozen in place and all movement keys are ignored.
 
+**turn**: when true, the player will continually face the direction the camera is looking in.
+
 **duration**: how long this effect should last in seconds.
 
 **cancellable**: whether any movement keys will cancel the effect. if enabled, freeze is ignored.
 
-### `.getBoneTransform(boneName)`: Matrix4
+**onEnd**: a function that should be called either at the end of the `duration` or when the player moves if `cancellable`.
 
-Returns a matrix of the bone transform in world space.
 
-See [Avatar](/docs/ref/Avatar.md) for full details.
 
