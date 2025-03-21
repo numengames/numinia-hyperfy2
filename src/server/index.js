@@ -20,10 +20,8 @@ import { getDB } from './db'
 import { Storage } from './Storage'
 
 const rootDir = path.join(__dirname, '../')
-
 const worldDir = path.join(rootDir, process.env.WORLD)
 const assetsDir = path.join(worldDir, '/assets')
-
 const port = process.env.PORT
 
 await fs.ensureDir(worldDir)
