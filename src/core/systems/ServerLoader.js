@@ -21,6 +21,9 @@ import { createEmoteFactory } from '../extras/createEmoteFactory'
 export class ServerLoader extends System {
   constructor(world) {
     super(world)
+    const rootDir = process.env.STORAGE_PATH || path.join(__dirname, '../')
+    const dataVolumeName = process.env.STORAGE_DIRNAME || 'world'
+    this.assetsDir = path.join(rootDir, `${dataVolumeName}/assets`)
     this.promises = new Map()
     this.results = new Map()
     this.rgbeLoader = new RGBELoader()

@@ -19,9 +19,14 @@ import { Storage } from './Storage'
 import { initCollections } from './collections'
 
 const rootDir = path.join(__dirname, '../')
-const worldDir = path.join(rootDir, process.env.WORLD)
-const assetsDir = path.join(worldDir, '/assets')
-const collectionsDir = path.join(worldDir, '/collections')
+
+const dataRootDir = process.env.STORAGE_PATH || rootDir
+const dataVolumeName = process.env.STORAGE_DIRNAME || 'world'
+
+const worldDir = path.join(dataRootDir, dataVolumeName)
+const assetsDir = path.join(dataRootDir, `${dataVolumeName}/assets`)
+const collectionsDir = path.join(dataRootDir, `${dataVolumeName}/collections`)
+
 const port = process.env.PORT
 
 // create world folders if needed
@@ -162,6 +167,7 @@ fastify.get('/status', async (request, reply) => {
       uptime: Math.round(world.time),
       protected: process.env.ADMIN_CODE !== undefined ? true : false,
       connectedUsers: [],
+      world: process.env.WORLD,
       commitHash: process.env.COMMIT_HASH,
     }
     for (const socket of world.network.sockets.values()) {
@@ -201,7 +207,7 @@ async function worldNetwork(fastify) {
   })
 }
 
-console.log(`running on port ${port}`)
+console.log(`running ${process.env.WORLD} on port ${port}`)
 
 // Graceful shutdown
 process.on('SIGINT', async () => {
