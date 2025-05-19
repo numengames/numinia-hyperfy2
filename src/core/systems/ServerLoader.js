@@ -28,6 +28,7 @@ export class ServerLoader extends System {
     this.results = new Map()
     this.rgbeLoader = new RGBELoader()
     this.gltfLoader = new GLTFLoader()
+    this.preloadItems = []
     // this.gltfLoader.register(parser => new VRMLoaderPlugin(parser))
 
     // mock globals to allow gltf loader to work in nodejs
@@ -52,12 +53,49 @@ export class ServerLoader extends System {
     return this.results.get(key)
   }
 
+  preload(type, url) {
+    this.preloadItems.push({ type, url })
+  }
+
+  execPreload() {
+    const promises = this.preloadItems.map(item => this.load(item.type, item.url))
+    this.preloader = Promise.allSettled(promises).then(() => {
+      this.preloader = null
+    })
+  }
+
+  async fetchArrayBuffer(url) {
+    const isRemote = url.startsWith('http://') || url.startsWith('https://')
+    if (isRemote) {
+      const response = await fetch(url)
+      const arrayBuffer = await response.arrayBuffer()
+      return arrayBuffer
+    } else {
+      const buffer = await fs.readFile(url)
+      const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
+      return arrayBuffer
+    }
+  }
+
+  async fetchText(url) {
+    const isRemote = url.startsWith('http://') || url.startsWith('https://')
+    if (isRemote) {
+      const response = await fetch(url)
+      const text = await response.text()
+      return text
+    } else {
+      const text = await fs.readFile(url, { encoding: 'utf8' })
+      return text
+    }
+  }
+
   load(type, url) {
     const key = `${type}/${url}`
     if (this.promises.has(key)) {
       return this.promises.get(key)
     }
-    url = this.resolvePath(url)
+    url = this.world.resolveURL(url)
+
     let promise
     if (type === 'hdr') {
       // promise = this.rgbeLoader.loadAsync(url).then(texture => {
@@ -73,8 +111,7 @@ export class ServerLoader extends System {
     if (type === 'model') {
       promise = new Promise(async (resolve, reject) => {
         try {
-          const buffer = await fs.readFile(url)
-          const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
+          const arrayBuffer = await this.fetchArrayBuffer(url)
           this.gltfLoader.parse(arrayBuffer, '', glb => {
             const node = glbToNodes(glb, this.world)
             const model = {
@@ -93,8 +130,7 @@ export class ServerLoader extends System {
     if (type === 'emote') {
       promise = new Promise(async (resolve, reject) => {
         try {
-          const buffer = await fs.readFile(url)
-          const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
+          const arrayBuffer = await this.fetchArrayBuffer(url)
           this.gltfLoader.parse(arrayBuffer, '', glb => {
             const factory = createEmoteFactory(glb, url)
             const emote = {
@@ -135,7 +171,7 @@ export class ServerLoader extends System {
     if (type === 'script') {
       promise = new Promise(async (resolve, reject) => {
         try {
-          const code = await fs.readFile(url, { encoding: 'utf8' })
+          const code = await this.fetchText(url)
           const script = this.world.scripts.evaluate(code)
           this.results.set(key, script)
           resolve(script)
@@ -153,10 +189,9 @@ export class ServerLoader extends System {
     return promise
   }
 
-  resolvePath(url) {
-    if (url.startsWith('asset://')) {
-      return url.replace('asset:/', this.assetsDir)
-    }
-    return url
+  destroy() {
+    this.promises.clear()
+    this.results.clear()
+    this.preloadItems = []
   }
 }
