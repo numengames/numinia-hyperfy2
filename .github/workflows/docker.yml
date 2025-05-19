@@ -7,6 +7,7 @@ on:
     branches:
       - 'main'
       - 'dev'
+      - 'feature/xr-controller-button-interaction'
       - 'solana-v2'
     tags:
       - 'v*.*.*'
