@@ -15,38 +15,38 @@ import multipart from '@fastify/multipart'
 import { createServerWorld } from '../core/createServerWorld'
 import { hashFile } from '../core/utils-server'
 import { getDB } from './db'
-import { Storage } from './Storage'
-import { initCollections } from './collections'
+import { CloudStorage } from './CloudStorage'
+import { StorageManager } from './StorageManager'
+import { initCollections } from './collectionsManager'
 
-const rootDir = path.join(__dirname, '../')
-const worldDir = path.join(rootDir, process.env.WORLD)
-const assetsDir = path.join(worldDir, '/assets')
-const collectionsDir = path.join(worldDir, '/collections')
 const port = process.env.PORT
 
-// create world folders if needed
-await fs.ensureDir(worldDir)
-await fs.ensureDir(assetsDir)
-await fs.ensureDir(collectionsDir)
-
-// copy over built-in assets and collections
-await fs.copy(path.join(rootDir, 'src/world/assets'), path.join(assetsDir))
-await fs.copy(path.join(rootDir, 'src/world/collections'), path.join(collectionsDir))
+// Initialize storage manager
+const storageManager = new StorageManager()
+await storageManager.initialize()
 
 // init collections
-const collections = await initCollections({ collectionsDir, assetsDir })
+const collections = await initCollections({ storageManager })
 
 // init db
-const db = await getDB(path.join(worldDir, '/db.sqlite'))
+const paths = storageManager.getPaths()
+const dbPath = paths ? path.join(paths.worldDir, '/db.sqlite') : './world/db.sqlite'
+const db = await getDB(dbPath)
 
 // init storage
-const storage = new Storage(path.join(worldDir, '/storage.json'))
+const storage = new CloudStorage(storageManager)
+await storage.init()
 
 // create world
 const world = createServerWorld()
-world.assetsUrl = process.env.PUBLIC_ASSETS_URL
+world.assetsUrl = storageManager.getAssetsUrl()
 world.collections.deserialize(collections)
-world.init({ db, storage, assetsDir })
+world.init({ 
+  db, 
+  storage, 
+  assetsDir: paths?.assetsDir || null, 
+  storageManager 
+})
 
 const fastify = Fastify({ logger: { level: 'error' } })
 
@@ -56,7 +56,7 @@ fastify.get('/', async (req, reply) => {
   const title = world.settings.title || 'World'
   const desc = world.settings.desc || ''
   const image = world.resolveURL(world.settings.image?.url) || ''
-  const url = process.env.PUBLIC_ASSETS_URL
+  const url = storageManager.getAssetsUrl()
   const filePath = path.join(__dirname, 'public', 'index.html')
   let html = fs.readFileSync(filePath, 'utf-8')
   html = html.replaceAll('{url}', url)
@@ -75,16 +75,22 @@ fastify.register(statics, {
     res.setHeader('Expires', '0')
   },
 })
-fastify.register(statics, {
-  root: assetsDir,
-  prefix: '/assets/',
-  decorateReply: false,
-  setHeaders: res => {
-    // all assets are hashed & immutable so we can use aggressive caching
-    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable') // 1 year
-    res.setHeader('Expires', new Date(Date.now() + 31536000000).toUTCString()) // older browsers
-  },
-})
+
+// Only register local assets serving if not using S3
+if (!storageManager.isUsingS3()) {
+  const assetsDir = paths.assetsDir
+  fastify.register(statics, {
+    root: assetsDir,
+    prefix: '/assets/',
+    decorateReply: false,
+    setHeaders: res => {
+      // all assets are hashed & immutable so we can use aggressive caching
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable') // 1 year
+      res.setHeader('Expires', new Date(Date.now() + 31536000000).toUTCString()) // older browsers
+    },
+  })
+}
+
 fastify.register(multipart, {
   limits: {
     fileSize: 100 * 1024 * 1024, // 100MB
@@ -122,19 +128,41 @@ fastify.post('/api/upload', async (req, reply) => {
   // hash from buffer
   const hash = await hashFile(buffer)
   const filename = `${hash}.${ext}`
-  // save to fs
-  const filePath = path.join(assetsDir, filename)
-  const exists = await fs.exists(filePath)
-  if (!exists) {
-    await fs.writeFile(filePath, buffer)
+
+  try {
+    const exists = await storageManager.fileExists(filename)
+    if (!exists) {
+      const contentType = file.mimetype || 'application/octet-stream'
+      const url = await storageManager.uploadFile(filename, buffer, contentType)
+      console.log(`File uploaded: ${filename}`)
+    } else {
+      console.log(`File already exists: ${filename}`)
+    }
+    
+    return reply.code(200).send({ 
+      success: true, 
+      filename,
+      url: storageManager.getPublicUrl(filename)
+    })
+  } catch (error) {
+    console.error('Upload error:', error)
+    return reply.code(500).send({ 
+      success: false, 
+      error: 'Failed to upload file' 
+    })
   }
 })
 
 fastify.get('/api/upload-check', async (req, reply) => {
   const filename = req.query.filename
-  const filePath = path.join(assetsDir, filename)
-  const exists = await fs.exists(filePath)
-  return { exists }
+  
+  try {
+    const exists = await storageManager.fileExists(filename)
+    return { exists, url: exists ? storageManager.getPublicUrl(filename) : null }
+  } catch (error) {
+    console.error('Upload check error:', error)
+    return reply.code(500).send({ error: 'Failed to check file' })
+  }
 })
 
 fastify.get('/health', async (request, reply) => {
