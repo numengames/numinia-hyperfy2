@@ -19,7 +19,14 @@ export class StorageManager {
    * Initialize storage based on environment configuration
    */
   async initialize() {
-    if (process.env.S3_BUCKET_NAME) {
+    const storageType = process.env.STORAGE_TYPE || 'local'
+    
+    if (storageType === 'aws') {
+      // Validate required S3 configuration
+      if (!process.env.S3_BUCKET_NAME) {
+        throw new Error('S3_BUCKET_NAME is required when STORAGE_TYPE=aws')
+      }
+      
       // Initialize S3 storage
       this.isS3 = true
       this.storage = new AwsS3Storage({
@@ -31,10 +38,10 @@ export class StorageManager {
         cloudfrontUrl: process.env.CLOUDFRONT_URL, // Optional CloudFront URL
       })
       
-      console.log('Initializing S3 storage...')
+      console.log('Initializing AWS S3 storage...')
       await this.storage.initialize()
       
-    } else {
+    } else if (storageType === 'local') {
       // Initialize local file storage
       this.isS3 = false
       this.storage = new FileStorage({
@@ -43,6 +50,8 @@ export class StorageManager {
       
       console.log('Initializing local file storage...')
       await this.storage.initialize()
+    } else {
+      throw new Error(`Unsupported storage type: ${storageType}. Supported types: 'local', 'aws'`)
     }
 
     // Initialize storage data

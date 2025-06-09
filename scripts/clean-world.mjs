@@ -5,6 +5,17 @@ import Knex from 'knex'
 import moment from 'moment'
 import { fileURLToPath } from 'url'
 
+/**
+ * Clean World Script
+ * Removes unused blueprints and assets from the world database and file system.
+ * Supports SQLite3 (default), PostgreSQL, and MySQL databases.
+ * 
+ * Database configuration is read from environment variables:
+ * - DB_TYPE: 'pg' (PostgreSQL), 'mysql2' (MySQL), or 'better-sqlite3' (SQLite - default)
+ * - For PostgreSQL/MySQL: DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME
+ * - For SQLite: Uses local ./[world]/db.sqlite file
+ */
+
 const DRY_RUN = false
 
 const world = process.env.WORLD || 'world'
@@ -14,13 +25,52 @@ const rootDir = path.join(__dirname, '../')
 const worldDir = path.join(rootDir, world)
 const assetsDir = path.join(worldDir, '/assets')
 
-const db = Knex({
-  client: 'better-sqlite3',
-  connection: {
-    filename: `./${world}/db.sqlite`,
-  },
-  useNullAsDefault: true,
-})
+function getDBConfig() {
+  const { DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME, DB_TYPE } = process.env;
+
+  const config = {
+    client: DB_TYPE || 'better-sqlite3',
+  }
+
+  if (DB_TYPE === 'pg' && DB_HOST && DB_PORT && DB_USER && DB_PASSWORD && DB_NAME) {
+    config.connection = {
+      host: DB_HOST,
+      port: parseInt(DB_PORT),
+      user: DB_USER,
+      database: DB_NAME,
+      password: DB_PASSWORD,
+    }
+    config.pool = {
+      min: 2,
+      max: 10
+    }
+  } else if (DB_TYPE === 'mysql2' && DB_HOST && DB_PORT && DB_USER && DB_PASSWORD && DB_NAME) {
+    config.connection = {
+      host: DB_HOST,
+      port: parseInt(DB_PORT),
+      user: DB_USER,
+      database: DB_NAME,
+      password: DB_PASSWORD,
+      charset: 'utf8mb4',
+      timezone: 'UTC'
+    }
+    config.pool = {
+      min: 2,
+      max: 10
+    }
+  } else {
+    // SQLite fallback
+    config.connection = {
+      filename: `./${world}/db.sqlite`,
+    }
+    config.useNullAsDefault = true
+  }
+
+  return config;
+}
+
+const dbConfig = getDBConfig()
+const db = Knex(dbConfig)
 
 // TODO: run any missing migrations first?
 
