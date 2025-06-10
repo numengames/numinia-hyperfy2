@@ -4,13 +4,13 @@ import moment from 'moment'
 let db
 
 function getDBConfig(sqlitePath) {
-  const { DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME, DB_TYPE } = process.env;
+  const { DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME, DB_TYPE, DB_SCHEMA } = process.env;
 
   const config = {
     client: DB_TYPE || 'better-sqlite3',
   }
 
-  if (DB_TYPE === 'pg' && DB_HOST && DB_PORT && DB_USER && DB_PASSWORD && DB_NAME) {
+  if (DB_TYPE === 'pg' && DB_HOST && DB_PORT && DB_USER && DB_PASSWORD && DB_NAME && DB_SCHEMA) {
     config.connection = {
       host: DB_HOST,
       port: parseInt(DB_PORT),
@@ -22,6 +22,7 @@ function getDBConfig(sqlitePath) {
         timezone: 'UTC'
       })
     }
+    config.searchPath = [DB_SCHEMA]
     config.pool = {
       min: 2,
       max: 10
