@@ -17,7 +17,7 @@ import { getDB } from './db'
 import { StorageManager } from './storage/StorageManager'
 import { initCollections } from './storage/collectionsManager'
 
-const port = process.env.PORT
+const port = process.env.PORT || 3000
 
 // Initialize storage manager
 const storageManager = new StorageManager()
