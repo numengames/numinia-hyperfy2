@@ -20,14 +20,11 @@ import { cleaner } from './cleaner'
 
 const rootDir = path.join(__dirname, '../')
 const worldDir = path.join(rootDir, process.env.WORLD)
-const port = process.env.PORT
+const port = process.env.PORT || 3000
 
 // check envs
 if (!process.env.WORLD) {
   throw new Error('[envs] WORLD not set')
-}
-if (!process.env.PORT) {
-  throw new Error('[envs] PORT not set')
 }
 if (!process.env.JWT_SECRET) {
   throw new Error('[envs] JWT_SECRET not set')
