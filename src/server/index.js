@@ -83,6 +83,7 @@ await world.init({
   assetsDir: assets.dir,
   assetsUrl: assets.url,
   db,
+  assets,
   storage,
   collections: collections.list,
 })

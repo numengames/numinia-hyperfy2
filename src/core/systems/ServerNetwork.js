@@ -287,6 +287,7 @@ export class ServerNetwork extends System {
         collections: this.world.collections.serialize(),
         settings: this.world.settings.serialize(),
         chat: this.world.chat.serialize(),
+        ai: this.world.ai.serialize(),
         blueprints: this.world.blueprints.serialize(),
         entities: this.world.entities.serialize(),
         livekit,
@@ -309,7 +310,8 @@ export class ServerNetwork extends System {
     this.send('chatAdded', msg, socket.id)
   }
 
-  onCommand = async (socket, args) => {
+  onCommand = async (socket, data) => {
+    const { args } = data
     // handle slash commands
     const player = socket.player
     const playerId = player.data.id
@@ -550,6 +552,13 @@ export class ServerNetwork extends System {
 
   onPlayerSessionAvatar = (socket, data) => {
     this.sendTo(data.networkId, 'playerSessionAvatar', data.avatar)
+  }
+
+  onAi = (socket, action) => {
+    if (!socket.player.isBuilder()) {
+      return console.error('player attempted to use ai but they are not a builder')
+    }
+    this.world.ai.onAction(action)
   }
 
   onPing = (socket, time) => {
