@@ -59,8 +59,8 @@ if (process.env.ASSETS === 's3' && !process.env.ASSETS_S3_URI) {
 if (!process.env.COLLECTIONS) {
   throw new Error(`[envs] COLLECTIONS must be set to 'local' or 's3'`)
 }
-if (process.env.COLLECTIONS === 's3' && !process.env.COLLECTIONS_S3_URI) {
-  throw new Error(`[envs] COLLECTIONS_S3_URI must be set when using COLLECTIONS=s3`)
+if (process.env.COLLECTIONS === 's3' && !process.env.COLLECTIONS_BASE_URL) {
+  throw new Error(`[envs] COLLECTIONS_BASE_URL must be set when using COLLECTIONS=s3`)
 }
 
 const fastify = Fastify({ logger: { level: 'error' } })
