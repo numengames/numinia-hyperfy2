@@ -9,6 +9,7 @@ on:
       - 'dev'
       - 'solana-v2'
       - 'ai'
+      - 'fix/disconnect-issues'
     tags:
       - 'v*.*.*'
 
