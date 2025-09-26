@@ -48,6 +48,17 @@ export class App extends Entity {
     this.hitResultsPool = []
     this.hitResults = []
     this.deadHook = { dead: false }
+    
+    // Set up cleanup for player proxies on leave events
+    this.onLeaveHandler = ({ playerId }) => {
+      const proxy = this.playerProxies.get(playerId)
+      if (proxy) {
+        proxy.$cleanup()
+        this.playerProxies.delete(playerId)
+      }
+    }
+    this.onWorldEvent('leave', this.onLeaveHandler)
+    
     this.build()
   }
 
@@ -440,10 +451,13 @@ export class App extends Entity {
 
   getPlayerProxy(playerId) {
     if (playerId === undefined) playerId = this.world.entities.player?.data.id
+    if (!playerId) return null
+    
     let proxy = this.playerProxies.get(playerId)
     if (!proxy || proxy.destroyed) {
       const player = this.world.entities.getPlayer(playerId)
-      if (!player) return null
+      // Check if player exists and is not destroyed/destroying
+      if (!player || player.destroyed || !player.data) return null
       proxy = createPlayerProxy(this, player)
       this.playerProxies.set(playerId, proxy)
     }

@@ -4,7 +4,7 @@ import StatsGL from '../libs/stats-gl'
 import Panel from '../libs/stats-gl/panel'
 import { isBoolean } from 'lodash-es'
 
-const PING_RATE = 1 / 2
+const PING_RATE = parseInt(process.env.CLIENT_PING_RATE || '1') // seconds - client ping for latency stats
 
 /**
  * Stats System
