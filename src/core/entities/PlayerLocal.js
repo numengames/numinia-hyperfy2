@@ -106,11 +106,11 @@ export class PlayerLocal extends Entity {
       prevTransform: new THREE.Matrix4(),
     }
 
-    this.xrControllerModelFactory = null
-    this.xrControllerModel1 = null
-    this.xrControllerModel2 = null
     this.xrRig = new THREE.Object3D()
     this.xrRig.rotation.reorder('YXZ')
+    this.xrControllerFactory = null
+    this.xrControllerLeft = null
+    this.xrControllerRight = null
 
     this.mode = Modes.IDLE
     this.axis = new THREE.Vector3()
@@ -323,14 +323,14 @@ export class PlayerLocal extends Entity {
 
   onXRSession = session => {
     if (session) {
-      if (!this.xrControllerModel1) {
-        this.xrControllerModelFactory = new XRControllerModelFactory()
-        this.xrControllerModel1 = this.world.graphics.renderer.xr.getControllerGrip(0)
-        this.xrControllerModel1.add(this.xrControllerModelFactory.createControllerModel(this.xrControllerModel1))
-        this.xrRig.add(this.xrControllerModel1)
-        this.xrControllerModel2 = this.world.graphics.renderer.xr.getControllerGrip(1)
-        this.xrControllerModel2.add(this.xrControllerModelFactory.createControllerModel(this.xrControllerModel2))
-        this.xrRig.add(this.xrControllerModel2)
+      if (!this.xrControllerFactory) {
+        this.xrControllerFactory = new XRControllerModelFactory()
+        this.xrControllerLeft = this.world.graphics.renderer.xr.getControllerGrip(0)
+        this.xrControllerLeft.add(this.xrControllerFactory.createControllerModel(this.xrControllerLeft))
+        this.xrRig.add(this.xrControllerLeft)
+        this.xrControllerRight = this.world.graphics.renderer.xr.getControllerGrip(1)
+        this.xrControllerRight.add(this.xrControllerFactory.createControllerModel(this.xrControllerRight))
+        this.xrRig.add(this.xrControllerRight)
       }
       this.world.stage.scene.add(this.xrRig)
       this.xrRig.add(this.world.camera)
@@ -758,14 +758,15 @@ export class PlayerLocal extends Entity {
       const zeroAngular = v4.set(0, 0, 0)
       this.capsule.setAngularVelocity(zeroAngular.toPxVec3())
 
-      // if not in build mode, cancel flying
-      if (!this.world.builder?.enabled) {
+      // if non-xr and not in build mode, cancel flying
+      if (!this.world.builder?.enabled && !this.isXR) {
         this.toggleFlying()
       }
     }
 
-    // double jump in build, mode toggle flying
-    if (this.jumpPressed && this.world.builder?.enabled) {
+    // double jump in build mode, toggle flying
+    // double jump in xr and "can" build, toggle flying
+    if (this.jumpPressed && (this.world.builder?.enabled || (this.isXR && this.world.builder?.canBuild()))) {
       if (this.world.time - this.lastJumpAt < 0.4) {
         this.toggleFlying()
       }
@@ -1036,6 +1037,11 @@ export class PlayerLocal extends Entity {
         v1.copy(gazeTiltAxis).applyQuaternion(this.cam.quaternion) // tilt in cam space
         this.gaze.applyAxisAngle(v1, gazeTiltAngle) // positive for upward tilt
       }
+    }
+
+    if (xr) {
+      // hint to controls that xr rig is in a new position
+      this.world.controls.applyXRRig(this.xrRig)
     }
 
     // apply locomotion
