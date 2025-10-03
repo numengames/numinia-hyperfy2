@@ -251,13 +251,16 @@ export class PlayerRemote extends Entity {
 
   destroy(local) {
     if (this.destroyed) return
+    
+    // Emit leave event first, while all data is still intact
+    this.world.events.emit('leave', { playerId: this.data.id })
+    
     this.destroyed = true
 
     clearTimeout(this.chatTimer)
     this.base.deactivate()
     this.avatar = null
     this.world.setHot(this, false)
-    this.world.events.emit('leave', { playerId: this.data.id })
     this.aura.deactivate()
     this.aura = null
 

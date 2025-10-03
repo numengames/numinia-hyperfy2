@@ -11,6 +11,8 @@ export class Socket {
     this.alive = true
     this.closed = false
     this.disconnected = false
+    this.missedPongs = 0 // Track consecutive missed pongs
+    this.maxMissedPongs = parseInt(process.env.MAX_MISSED_PONGS || '3') // Configurable tolerance
 
     this.ws.on('message', this.onMessage)
     this.ws.on('pong', this.onPong)
@@ -28,8 +30,22 @@ export class Socket {
   }
 
   ping() {
+    if (!this.alive) {
+      this.missedPongs++
+      if (this.missedPongs >= this.maxMissedPongs) {
+        // Too many missed pongs, mark as dead
+        console.log(`Socket ${this.id} marked as dead after ${this.missedPongs} missed pongs`)
+        return false
+      } else {
+        // Log missed pongs for monitoring (but don't spam)
+        if (this.missedPongs === 1) {
+          console.log(`Socket ${this.id} missed pong (${this.missedPongs}/${this.maxMissedPongs})`)
+        }
+      }
+    }
     this.alive = false
     this.ws.ping()
+    return true
   }
 
   // end(code) {
@@ -39,6 +55,7 @@ export class Socket {
 
   onPong = () => {
     this.alive = true
+    this.missedPongs = 0 // Reset missed pongs counter
   }
 
   onMessage = packet => {

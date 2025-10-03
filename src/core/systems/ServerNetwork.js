@@ -9,7 +9,8 @@ import * as THREE from '../extras/three'
 import { Ranks } from '../extras/ranks'
 
 const SAVE_INTERVAL = parseInt(process.env.SAVE_INTERVAL || '60') // seconds
-const PING_RATE = 10 // seconds
+const PING_RATE = parseInt(process.env.PING_RATE || '10') // seconds - configurable via env var
+const MAX_MISSED_PONGS = parseInt(process.env.MAX_MISSED_PONGS || '3') // configurable tolerance
 const defaultSpawn = '{ "position": [0, 0, 0], "quaternion": [0, 0, 0, 1] }'
 
 const HEALTH_MAX = 100
@@ -95,10 +96,10 @@ export class ServerNetwork extends System {
     // see: https://www.npmjs.com/package/ws#how-to-detect-and-close-broken-connections
     const dead = []
     this.sockets.forEach(socket => {
-      if (!socket.alive) {
+      const pingResult = socket.ping()
+      if (pingResult === false) {
+        // Socket has exceeded max missed pongs
         dead.push(socket)
-      } else {
-        socket.ping()
       }
     })
     dead.forEach(socket => socket.disconnect())
@@ -566,8 +567,35 @@ export class ServerNetwork extends System {
   }
 
   onDisconnect = (socket, code) => {
+    // Log disconnection details for monitoring
+    const reason = this.getDisconnectReason(code)
+    const playerName = socket.player?.data?.name || 'Unknown'
+    const connectionDuration = socket.player?.data?.enteredAt ? 
+      Math.round((Date.now() - socket.player.data.enteredAt) / 1000) : 0
+    
+    console.log(`Player disconnected: ${playerName} (${socket.id}) - Reason: ${reason} - Duration: ${connectionDuration}s - Code: ${code}`)
+    
     this.world.livekit.clearModifiers(socket.id)
     socket.player.destroy(true)
     this.sockets.delete(socket.id)
+  }
+
+  getDisconnectReason(code) {
+    const reasons = {
+      1000: 'Normal closure',
+      1001: 'Going away (page refresh/close)',
+      1002: 'Protocol error',
+      1003: 'Unsupported data',
+      1005: 'No status received',
+      1006: 'Abnormal closure (network issue)',
+      1007: 'Invalid frame payload data',
+      1008: 'Policy violation',
+      1009: 'Message too big',
+      1010: 'Mandatory extension missing',
+      1011: 'Internal server error',
+      1015: 'TLS handshake failure',
+      undefined: 'Ping timeout (missed pongs)'
+    }
+    return reasons[code] || `Unknown (${code})`
   }
 }

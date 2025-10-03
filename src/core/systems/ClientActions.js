@@ -51,7 +51,12 @@ export class ClientActions extends System {
   }
 
   update(delta) {
-    const cameraPos = this.world.rig.position
+    let cameraPos
+    if (this.world.xr.session) {
+      cameraPos = v1.setFromMatrixPosition(this.world.xr.camera.matrixWorld)
+    } else {
+      cameraPos = v1.setFromMatrixPosition(this.world.camera.matrixWorld)
+    }
 
     this.btnDown =
       this.control.keyE.down ||
