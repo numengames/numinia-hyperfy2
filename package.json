@@ -57,7 +57,7 @@
     "livekit-server-sdk": "^2.11.0",
     "lodash-es": "^4.17.21",
     "lucide-react": "^0.469.0",
-    "moment": "^2.30.1",
+    "moment": "^2.31.0",
     "msgpackr": "^1.11.0",
     "nanoid": "^5.0.6",
     "postprocessing": "^6.36.4",
